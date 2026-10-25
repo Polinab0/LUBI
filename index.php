@@ -21,10 +21,8 @@ $database = new Database();
 // Create the PDO connection
 $dbCon = $database->connect();
 
-// Create a Post object
+// Create objects
 $postObject = new Post($dbCon);
-
-// Create a Comment object
 $commentObject = new Comment($dbCon);
 
 
@@ -74,8 +72,31 @@ if (isset($_POST['addComment'])) {
 }
 
 
-// Get all posts from the database
-$posts = $postObject->getAllPosts();
+// Get all categories from the database
+$categoryQuery = $dbCon->prepare(
+    "SELECT * FROM category"
+);
+
+$categoryQuery->execute();
+
+$categories = $categoryQuery->fetchAll(PDO::FETCH_ASSOC);
+
+
+// Check if a category was selected
+if (isset($_GET['categoryID'])) {
+
+    $selectedCategoryID = $_GET['categoryID'];
+
+    // Get posts from the selected category
+    $posts = $postObject->getPostsByCategory(
+        $selectedCategoryID
+    );
+
+} else {
+
+    // Get all posts
+    $posts = $postObject->getAllPosts();
+}
 
 ?>
 
@@ -83,187 +104,381 @@ $posts = $postObject->getAllPosts();
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <title>LUBI - Feed</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>LUBI - Discover</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
 </head>
 
 <body>
 
-    <h1>Welcome to LUBI</h1>
 
-    <h2>
-        Hello <?php echo $_SESSION['username']; ?>
-    </h2>
+<!-- Header -->
 
-    <p>
-        User type:
-        <?php echo $_SESSION['userType']; ?>
-    </p>
+<header class="header">
 
-    <a href="createPost.php">
-        Create Post
+    <a
+        href="index.php"
+        class="wordmark"
+    >
+        LUBI<span class="wordmark-dot">.</span>
     </a>
 
-    <a href="profile.php">My Profile</a>
 
-    <br><br>
+    <nav class="main-nav">
 
-    <a href="logout.php">
-        Logout
-    </a>
+        <a
+            href="index.php"
+            class="active"
+        >
+            Discover
+        </a>
 
-    <hr>
+        <a href="#">
+            Learn
+        </a>
 
-    <h2>Latest Posts</h2>
+        <a href="createPost.php">
+            Create +
+        </a>
 
-
-    <?php foreach ($posts as $post) { ?>
-
-        <div>
-
-            <!-- Display username -->
-            <h3>
-                <?php echo $post['username']; ?>
-            </h3>
+    </nav>
 
 
-            <!-- Display category -->
-            <p>
-                Category:
-                <?php echo $post['categoryName']; ?>
-            </p>
+    <div class="header-right">
+
+        <a href="#">
+            Saved
+        </a>
+
+        <a href="profile.php">
+            <?php echo $_SESSION['username']; ?>
+        </a>
+
+        <a href="logout.php">
+            Logout
+        </a>
+
+    </div>
+
+</header>
 
 
-            <!-- Display post image -->
-            <?php if (!empty($post['file'])) { ?>
 
-                <a href="post.php?postID=<?php echo $post['postID']; ?>">
-
-                    <img
-                        src="<?php echo $post['file']; ?>"
-                        alt="Post image"
-                        width="300"
-                    >
-
-                </a>
-
-            <?php } ?>
+<main>
 
 
-            <!-- Display caption -->
-            <p>
-                <?php echo $post['caption']; ?>
-            </p>
+    <!-- Hero -->
+
+    <section class="home-hero page-container">
 
 
-            <!-- Display post date -->
-            <small>
-                <?php echo $post['createdAt']; ?>
-            </small>
+        <div class="hero-copy">
+
+            <div class="hero-kicker">
+
+                <span class="asterisk">
+                    ✳
+                </span>
+
+                THE BEAUTY OF WHAT'S NEXT
+
+                <span class="issue">
+                    ISSUE 001 — YOUR CREATIVE WORLD
+                </span>
+
+            </div>
 
 
-            <?php
+            <h1>
 
-            // Get the number of likes
-            $likeCount = $postObject->getLikeCount(
-                $post['postID']
-            );
+                Beauty is<br>
 
-            // Get the number of comments
-            $commentCount = $commentObject->getCommentCount(
-                $post['postID']
-            );
+                what
+                <span class="serif">
+                    you
+                </span>
 
-            ?>
+                <br>
 
+                make it<span class="wordmark-dot">.</span>
 
-            <!-- Display number of likes -->
-            <p>
-                Likes:
-                <?php echo $likeCount; ?>
-            </p>
+            </h1>
 
 
-            <!-- Like form -->
-            <form action="index.php" method="post">
-
-                <input
-                    type="hidden"
-                    name="postID"
-                    value="<?php echo $post['postID']; ?>"
-                >
-
-                <input
-                    type="submit"
-                    name="like"
-                    value="Like"
-                >
-
-            </form>
-
-
-            <!-- Display number of comments -->
-            <p>
-                Comments:
-                <?php echo $commentCount; ?>
-            </p>
-
-
-            <!-- Add comment form -->
-            <form action="index.php" method="post">
-
-                <input
-                    type="hidden"
-                    name="postID"
-                    value="<?php echo $post['postID']; ?>"
-                >
-
-                <input
-                    type="text"
-                    name="commentText"
-                    placeholder="Write a comment..."
-                    required
-                >
-
-                <input
-                    type="submit"
-                    name="addComment"
-                    value="Comment"
-                >
-
-            </form>
-
-
-            <?php
-
-            // Get all comments for this post
-            $comments = $commentObject->getComments(
-                $post['postID']
-            );
-
-            ?>
-
-
-            <!-- Display comments -->
-            <?php foreach ($comments as $comment) { ?>
+            <div class="hero-bottom">
 
                 <p>
-
-                    <strong>
-                        <?php echo $comment['username']; ?>:
-                    </strong>
-
-                    <?php echo $comment['text']; ?>
-
+                    A space for the curious, the creators,
+                    and everyone becoming.
+                    Discover work that moves you.
+                    Learn from those who make it.
                 </p>
 
-            <?php } ?>
+
+                <a
+                    href="#discover-feed"
+                    class="circle-arrow"
+                >
+                    →
+                </a>
+
+            </div>
 
         </div>
 
-        <hr>
+
+
+        <div class="hero-visual">
+
+            <?php if (!empty($posts) && !empty($posts[0]['file'])) { ?>
+
+                <img
+                    src="<?php echo $posts[0]['file']; ?>"
+                    alt="Featured beauty work"
+                >
+
+            <?php } ?>
+
+
+            <div class="hero-image-label">
+
+                <span>
+                    IN THE SPOTLIGHT
+                </span>
+
+                <strong>
+
+                    <?php
+                    if (!empty($posts)) {
+                        echo $posts[0]['caption'];
+                    }
+                    ?>
+
+                </strong>
+
+            </div>
+
+
+            <span class="vertical-caption">
+
+                CREATE · LEARN · GROW · IN BEAUTY
+
+            </span>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- Category navigation -->
+
+    <div class="page-container">
+
+        <div class="category-nav">
+
+            <div class="category-label">
+
+                Explore by craft
+
+            </div>
+
+
+            <div class="category-list">
+
+             <a
+                 href="index.php"
+                 class="<?php echo !isset($_GET['categoryID']) ? 'active' : ''; ?>"
+             >
+                 All
+               </a>
+
+            <?php foreach ($categories as $category) { ?>
+
+              <a
+                  href="index.php?categoryID=<?php echo $category['categoryID']; ?>"
+                  class="
+                      <?php
+                      if (
+                          isset($_GET['categoryID']) &&
+                          $_GET['categoryID'] == $category['categoryID']
+                      ) {
+                          echo 'active';
+                      }
+                      ?>
+                  "
+              >
+                     <?php echo $category['name']; ?>
+                     </a>
 
     <?php } ?>
+
+</div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Feed -->
+
+    <section
+        class="feed-section page-container"
+        id="discover-feed"
+    >
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <div class="eyebrow">
+
+                    01 / TRENDING WORK
+
+                </div>
+
+
+                <h2>
+
+                    Made to
+                    <span class="serif">
+                        inspire.
+                    </span>
+
+                </h2>
+
+            </div>
+
+
+            <div class="section-heading-side">
+
+                <p>
+
+                    Fresh perspectives,
+                    new techniques,
+                    and the work worth
+                    looking at twice.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="editorial-grid">
+
+
+            <?php foreach ($posts as $post) { ?>
+
+
+                <article class="post-card">
+
+
+                    <?php if (!empty($post['file'])) { ?>
+
+                        <a
+                            href="post.php?postID=<?php echo $post['postID']; ?>"
+                            class="post-image-button"
+                        >
+
+                            <img
+                                src="<?php echo $post['file']; ?>"
+                                alt="Beauty post"
+                            >
+
+                        </a>
+
+                    <?php } ?>
+
+
+                    <div class="post-card-meta">
+
+                        <span>
+
+                            <?php echo $post['categoryName']; ?>
+
+                            /
+
+                            <?php echo $post['username']; ?>
+
+                        </span>
+
+                    </div>
+
+
+                    <a
+                        href="post.php?postID=<?php echo $post['postID']; ?>"
+                        class="post-card-title"
+                    >
+
+                        <?php echo $post['caption']; ?>
+
+                        <span>
+                            ↗
+                        </span>
+
+                    </a>
+
+
+                    <?php
+
+                    $likeCount =
+                        $postObject->getLikeCount(
+                            $post['postID']
+                        );
+
+                    $commentCount =
+                        $commentObject->getCommentCount(
+                            $post['postID']
+                        );
+
+                    ?>
+
+
+                    <div class="post-stats">
+
+                        <span>
+                            ♡ <?php echo $likeCount; ?>
+                        </span>
+
+                        <span>
+                            ◌ <?php echo $commentCount; ?>
+                        </span>
+
+                    </div>
+
+
+                </article>
+
+
+            <?php } ?>
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
 
 </body>
 
