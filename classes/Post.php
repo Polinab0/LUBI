@@ -174,4 +174,39 @@ class Post {
         return $result['likeCount'];
     }
 
+// Get posts by category
+public function getPostsByCategory($categoryID) {
+
+    // Prepare the SQL query
+    $query = $this->dbCon->prepare(
+        "SELECT
+            post.postID,
+            post.caption,
+            post.createdAt,
+            user.username,
+            category.name AS categoryName,
+            media.file,
+            media.type
+        FROM post
+        JOIN user
+            ON post.userID = user.userID
+        JOIN category
+            ON post.categoryID = category.categoryID
+        LEFT JOIN media
+            ON post.postID = media.postID
+        WHERE post.categoryID = :categoryID
+        ORDER BY post.createdAt DESC"
+    );
+
+    // Bind the category ID
+    $query->bindParam(':categoryID', $categoryID);
+
+    // Execute the query
+    $query->execute();
+
+    // Return filtered posts
+    return $query->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
 }
