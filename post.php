@@ -15,8 +15,12 @@ require_once "classes/Post.php";
 // Include the Comment class
 require_once "classes/Comment.php";
 
-// Create a database connection
-$dbCon = dbCon($user, $pass);
+
+// Create the Database object
+$database = new Database();
+
+// Create the PDO connection
+$dbCon = $database->connect();
 
 // Create objects
 $postObject = new Post($dbCon);

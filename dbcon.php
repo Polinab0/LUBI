@@ -1,26 +1,29 @@
 <?php
 
-// Database login information
-$user = "root";
-$pass = "";
+class Database {
 
-// Create a connection to the LUBI database
-function dbCon($user, $pass) {
+    private $user = "root";
+    private $pass = "";
+    private $dbCon;
 
-    try {
+    // Create a connection to the LUBI database
+    public function connect() {
 
-        $dbCon = new PDO(
-            'mysql:host=localhost;dbname=LUBI;charset=utf8',
-            $user,
-            $pass
-        );
+        try {
 
-        return $dbCon;
+            $this->dbCon = new PDO(
+                'mysql:host=localhost;dbname=LUBI;charset=utf8',
+                $this->user,
+                $this->pass
+            );
 
-    } catch (PDOException $err) {
+            return $this->dbCon;
 
-        echo "Error!: " . $err->getMessage() . "<br/>";
-        die();
+        } catch (PDOException $err) {
 
+            echo "Error!: " . $err->getMessage() . "<br/>";
+            die();
+
+        }
     }
 }

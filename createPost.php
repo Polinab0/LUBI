@@ -16,8 +16,11 @@ require_once "dbcon.php";
 // Include the Post class
 require_once "classes/Post.php";
 
-// Create a database connection
-$dbCon = dbCon($user, $pass);
+// Create the Database object
+$database = new Database();
+
+// Create the PDO connection
+$dbCon = $database->connect();
 
 // Create a Post object
 $postObject = new Post($dbCon);

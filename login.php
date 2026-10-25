@@ -9,8 +9,11 @@ require_once "classes/User.php";
 // Include the session functions
 require_once "includes/session.php";
 
-// Create a database connection
-$dbCon = dbCon($user, $pass);
+// Create the Database object
+$database = new Database();
+
+// Create the PDO connection
+$dbCon = $database->connect();
 
 // Create a User object
 $userObject = new User($dbCon);
