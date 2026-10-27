@@ -84,4 +84,36 @@ class Comment {
         // Return the number of comments
         return $result['commentCount'];
     }
+// Get the latest comments
+public function getLatestComments($limit = 5) {
+
+    // Prepare the SQL query
+    $query = $this->dbCon->prepare(
+        "SELECT
+            comment.commentID,
+            comment.text,
+            comment.createdAt,
+            comment.postID,
+            user.username
+        FROM comment
+        JOIN user
+            ON comment.userID = user.userID
+        ORDER BY comment.createdAt DESC
+        LIMIT :limit"
+    );
+
+    // Bind the limit as an integer
+    $query->bindValue(
+        ':limit',
+        $limit,
+        PDO::PARAM_INT
+    );
+
+    // Execute the query
+    $query->execute();
+
+    // Return the latest comments
+    return $query->fetchAll(PDO::FETCH_ASSOC);
+}
+
 }

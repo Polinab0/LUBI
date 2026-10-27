@@ -47,6 +47,7 @@ if (isset($_POST['like'])) {
 }
 
 
+
 // Check if a comment was submitted
 if (isset($_POST['addComment'])) {
 
@@ -97,6 +98,12 @@ if (isset($_GET['categoryID'])) {
     // Get all posts
     $posts = $postObject->getAllPosts();
 }
+
+// Get the latest comments
+$latestComments = $commentObject->getLatestComments();
+
+// Get the newest posts
+$newestPosts = $postObject->getNewestPosts();
 
 ?>
 
@@ -476,6 +483,184 @@ if (isset($_GET['categoryID'])) {
 
     </section>
 
+
+   <!-- Latest comments -->
+
+<section class="latest-comments-section page-container">
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                02 / LATEST COMMENTS
+            </div>
+
+            <h2>
+                What people
+                <span class="serif">
+                    are saying.
+                </span>
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="latest-comments-list">
+
+        <?php if (!empty($latestComments)) { ?>
+
+            <?php foreach ($latestComments as $comment) { ?>
+
+                <article class="latest-comment">
+
+                    <div class="latest-comment-user">
+                        <?php echo $comment['username']; ?>
+                    </div>
+
+                    <p>
+                        <?php echo $comment['text']; ?>
+                    </p>
+
+                    <a
+                        href="post.php?postID=<?php echo $comment['postID']; ?>"
+                    >
+                        View post →
+                    </a>
+
+                </article>
+
+            <?php } ?>
+
+        <?php } else { ?>
+
+            <p>No comments yet.</p>
+
+        <?php } ?>
+
+    </div>
+
+</section>
+
+
+<!-- Newest pictures -->
+
+<section class="newest-pictures-section page-container">
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                03 / NEWEST PICTURES
+            </div>
+
+            <h2>
+                Fresh from
+                <span class="serif">
+                    the community.
+                </span>
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="newest-pictures-grid">
+
+        <?php if (!empty($newestPosts)) { ?>
+
+            <?php foreach ($newestPosts as $post) { ?>
+
+                <article class="newest-picture-card">
+
+                    <?php if (!empty($post['file'])) { ?>
+
+                        <a
+                            href="post.php?postID=<?php echo $post['postID']; ?>"
+                        >
+                            <img
+                                src="<?php echo $post['file']; ?>"
+                                alt="Newest beauty post"
+                            >
+                        </a>
+
+                    <?php } ?>
+
+                    <div class="newest-picture-meta">
+
+                        <?php echo $post['categoryName']; ?>
+
+                        /
+
+                        <?php echo $post['username']; ?>
+
+                    </div>
+
+                    <a
+                        href="post.php?postID=<?php echo $post['postID']; ?>"
+                        class="newest-picture-title"
+                    >
+                        <?php echo $post['caption']; ?>
+                    </a>
+
+                </article>
+
+            <?php } ?>
+
+        <?php } else { ?>
+
+            <p>No posts yet.</p>
+
+        <?php } ?>
+
+    </div>
+
+</section>
+
+
+<!-- About LUBI -->
+
+<section class="about-section page-container">
+
+    <div class="about-grid">
+
+        <div class="about-label">
+            <div class="eyebrow">
+                04 / ABOUT LUBI
+            </div>
+        </div>
+
+        <div class="about-content">
+
+            <h2>
+                Create.
+                <span class="serif">
+                    Learn.
+                </span>
+                Grow in beauty.
+            </h2>
+
+            <p>
+                LUBI is a beauty platform where creators and learners
+                can share work, discover inspiration and develop
+                their skills in makeup, nails, hair, brows, lashes
+                and skincare.
+            </p>
+
+            <p>
+                Our goal is to turn inspiration into skills
+                and skills into expertise.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
 
 </main>
 

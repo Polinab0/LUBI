@@ -208,5 +208,43 @@ public function getPostsByCategory($categoryID) {
     return $query->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// Get the newest posts
+public function getNewestPosts($limit = 4) {
+
+    // Prepare the SQL query
+    $query = $this->dbCon->prepare(
+        "SELECT
+            post.postID,
+            post.caption,
+            post.createdAt,
+            user.username,
+            category.name AS categoryName,
+            media.file,
+            media.type
+        FROM post
+        JOIN user
+            ON post.userID = user.userID
+        JOIN category
+            ON post.categoryID = category.categoryID
+        LEFT JOIN media
+            ON post.postID = media.postID
+        ORDER BY post.createdAt DESC
+        LIMIT :limit"
+    );
+
+    // Bind the limit as an integer
+    $query->bindValue(
+        ':limit',
+        $limit,
+        PDO::PARAM_INT
+    );
+
+    // Execute the query
+    $query->execute();
+
+    // Return the newest posts
+    return $query->fetchAll(PDO::FETCH_ASSOC);
+}
+
 
 }

@@ -523,6 +523,191 @@ h3 {
     font-size: 12px;
 }
 
+/* Latest comments */
+
+.latest-comments-section {
+    padding: 90px 0 120px;
+    border-top: 1px solid #d5d7ce;
+}
+
+.latest-comments-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.latest-comment {
+    padding: 28px;
+
+    background: #e9ebe1;
+}
+
+.latest-comment-user {
+    margin-bottom: 18px;
+
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.latest-comment p {
+    margin: 0 0 24px;
+
+    font-family: 'Playfair Display', serif;
+    font-size: 25px;
+    font-style: italic;
+
+    line-height: 1.3;
+}
+
+.latest-comment a {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.latest-comment a:hover {
+    color: #697d36;
+}
+
+@media (max-width: 760px) {
+
+    .latest-comments-list {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* Newest pictures */
+
+.newest-pictures-section {
+    padding: 90px 0 120px;
+}
+
+.newest-pictures-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.newest-picture-card {
+    min-width: 0;
+}
+
+.newest-picture-card a:first-child {
+    display: block;
+    width: 100%;
+    height: 230px;
+    overflow: hidden;
+}
+
+.newest-picture-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    transition: transform 0.4s ease;
+}
+
+.newest-picture-card a:first-child:hover img {
+    transform: scale(1.03);
+}
+
+.newest-picture-meta {
+    margin-top: 12px;
+
+    font-family: 'Manrope', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+    text-transform: uppercase;
+
+    color: #777973;
+}
+
+.newest-picture-title {
+    display: block;
+
+    margin-top: 7px;
+
+    font-family: 'Manrope', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+
+    line-height: 1.3;
+}
+
+
+/* About LUBI */
+
+.about-section {
+    padding: 110px 0 130px;
+    border-top: 1px solid #d5d7ce;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 80px;
+}
+
+.about-content h2 {
+    max-width: 800px;
+    margin-bottom: 35px;
+
+    font-size: clamp(48px, 5vw, 72px);
+    line-height: 1.05;
+}
+
+.about-content p {
+    max-width: 620px;
+
+    margin: 0 0 18px;
+
+    color: #5f625b;
+
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+@media (max-width: 760px) {
+
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+}
+
+
+/* Tablet */
+
+@media (max-width: 900px) {
+
+    .newest-pictures-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+/* Mobile */
+
+@media (max-width: 480px) {
+
+    .newest-pictures-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
 
 /* Mobile */
 
