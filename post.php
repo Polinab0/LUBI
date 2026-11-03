@@ -134,7 +134,21 @@ $comments = $commentObject->getComments($postID);
         <p>
             <?php echo $post['caption']; ?>
         </p>
+        <!-- Save or unsave this post -->
+        <form action="savePost.php" method="post">
 
+            <input
+                type="hidden"
+                name="postID"
+                value="<?php echo $postID; ?>"
+            >
+
+            <input
+                type="submit"
+                value="Save / Unsave"
+            >
+
+        </form>
         <p>
             Likes:
             <?php echo $likeCount; ?>
