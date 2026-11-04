@@ -27,31 +27,60 @@ $userID = $_SESSION['userID'];
 // Get current user information
 $currentUser = $userObject->getUserById($userID);
 
+// Create an array for validation errors
+$errors = [];
 
-// Check if the form was submitted
 if (isset($_POST['submit'])) {
 
-    // Get form values
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $city = $_POST['city'];
-    $bio = $_POST['bio'];
+     // Check the CSRF token
+    if (
+        !isset($_POST['csrf_token'])
+        || !verify_csrf_token($_POST['csrf_token'])
+    ) {
+        die("Invalid CSRF token.");
+    }
 
-    // Update the user profile
-    $userObject->updateProfile(
-        $userID,
-        $username,
-        $email,
-        $city,
-        $bio
-    );
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $city = trim($_POST['city']);
+    $bio = trim($_POST['bio']);
 
-    // Update username in the session
-    $_SESSION['username'] = $username;
+    // Check if username is empty
+    if (empty($username)) {
+        $errors[] = "Username is required.";
+    }
 
-    // Redirect back to profile
-    header("Location: profile.php");
-    exit();
+    // Check if email is empty
+    if (empty($email)) {
+        $errors[] = "Email is required.";
+    }
+
+    // Check if email is valid
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Email is not valid.";
+    }
+
+    // Check bio length
+    if (strlen($bio) > 500) {
+        $errors[] = "Bio cannot be longer than 500 characters.";
+    }
+
+    // Update profile only if there are no errors
+    if (empty($errors)) {
+
+        $userObject->updateProfile(
+            $userID,
+            $username,
+            $email,
+            $city,
+            $bio
+        );
+
+        $_SESSION['username'] = $username;
+
+        header("Location: profile.php");
+        exit();
+    }
 }
 
 ?>
@@ -68,9 +97,31 @@ if (isset($_POST['submit'])) {
 
     <h1>Edit Profile</h1>
 
+    <?php if (!empty($errors)) { ?>
+
+    <?php foreach ($errors as $error) { ?>
+
+        <p>
+            <?php echo htmlspecialchars(
+                $error,
+                ENT_QUOTES,
+                'UTF-8'
+            ); ?>
+        </p>
+
+     <?php } ?>
+
+    <?php } ?>
+
     <form
-        action="editProfile.php"
-        method="post"
+    action="editProfile.php"
+    method="post"
+>
+
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="<?php echo csrf_token(); ?>"
     >
 
         <label for="username">Username:</label>
@@ -79,7 +130,7 @@ if (isset($_POST['submit'])) {
             type="text"
             name="username"
             id="username"
-            value="<?php echo $currentUser['username']; ?>"
+            value="<?php echo htmlspecialchars($username ?? $currentUser['username'], ENT_QUOTES, 'UTF-8'); ?>"
             required
         >
 
@@ -91,8 +142,7 @@ if (isset($_POST['submit'])) {
             type="email"
             name="email"
             id="email"
-            value="<?php echo $currentUser['email']; ?>"
-            required
+            value="<?php echo htmlspecialchars($email ?? $currentUser['email'], ENT_QUOTES, 'UTF-8'); ?>" required
         >
 
         <br><br>
@@ -103,7 +153,7 @@ if (isset($_POST['submit'])) {
             type="text"
             name="city"
             id="city"
-            value="<?php echo $currentUser['city']; ?>"
+            value="<?php echo htmlspecialchars($city ?? $currentUser['city'], ENT_QUOTES, 'UTF-8'); ?>"
         >
 
         <br><br>
@@ -113,7 +163,7 @@ if (isset($_POST['submit'])) {
         <textarea
             name="bio"
             id="bio"
-        ><?php echo $currentUser['bio']; ?></textarea>
+        ><?php echo htmlspecialchars($bio ?? $currentUser['bio'], ENT_QUOTES, 'UTF-8'); ?></textarea>
 
         <br><br>
 

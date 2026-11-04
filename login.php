@@ -21,9 +21,22 @@ $userObject = new User($dbCon);
 // Check if the login form was submitted
 if (isset($_POST['submit'])) {
 
+    // Check the CSRF token
+if (
+    !isset($_POST['csrf_token'])
+    || !verify_csrf_token($_POST['csrf_token'])
+) {
+    die("Invalid CSRF token.");
+}
+
     // Get the form values
-    $email = $_POST['email'];
+    $email = trim($_POST['email']);
     $password = $_POST['password'];
+
+    // Check if email is valid
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    die("Email is not valid.");
+}
 
     // Try to login the user
     $foundUser = $userObject->login(
@@ -65,11 +78,19 @@ if (isset($_POST['submit'])) {
 
     <?php
     if (isset($message)) {
-        echo "<p>" . $message . "</p>";
+    echo "<p>" . htmlspecialchars(
+        $message,
+        ENT_QUOTES,
+        'UTF-8'
+    ) . "</p>";
     }
     ?>
 
     <form action="login.php" method="post">
+        <input
+           type="hidden"
+           name="csrf_token"
+           value="<?php echo csrf_token(); ?>">
 
         <label for="email">Email:</label>
         <input

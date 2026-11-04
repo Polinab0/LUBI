@@ -2,6 +2,8 @@
 
 // Include the database connection
 require_once "dbcon.php";
+// Include the session functions
+require_once "includes/session.php";
 
 // Include the User class
 require_once "classes/User.php";
@@ -17,20 +19,61 @@ $userObject = new User($dbCon);
 
 // Check if the registration form was submitted
 if (isset($_POST['submit'])) {
+    // Check the CSRF token
+if (
+    !isset($_POST['csrf_token'])
+    || !verify_csrf_token($_POST['csrf_token'])
+) {
+    die("Invalid CSRF token.");
+}
 
     // Get form values
     $userType = $_POST['userType'];
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $email = $_POST['email'];
-    $city = $_POST['city'];
-    $bio = $_POST['bio'];
+    // Check if user type is valid
+    $allowedUserTypes = [
+        'learner',
+        'professional'
+    ];
 
-    // Register the new user
-    $userObject->register(
-        $userType,
-        $username,
-        $password,
+if (!in_array($userType, $allowedUserTypes)) {
+    die("Invalid user type.");
+}
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
+    $email = trim($_POST['email']);
+    $city = trim($_POST['city']);
+    $bio = trim($_POST['bio']);
+
+    // Check if username is empty
+if (empty($username)) {
+    die("Username is required.");
+}
+
+// Check if email is empty
+if (empty($email)) {
+    die("Email is required.");
+}
+
+// Check if email is valid
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    die("Email is not valid.");
+}
+
+// Check password length
+if (strlen($password) < 8) {
+    die("Password must be at least 8 characters.");
+}
+
+// Check bio length
+if (strlen($bio) > 500) {
+    die("Bio cannot be longer than 500 characters.");
+}
+
+// Register the new user
+$userObject->register(
+    $userType,
+    $username,
+    $password,
         $email,
         $city,
         $bio
@@ -55,6 +98,12 @@ if (isset($_POST['submit'])) {
     <h1>Create Account</h1>
 
     <form action="register.php" method="post">
+
+       <input
+          type="hidden"
+          name="csrf_token"
+          value="<?php echo csrf_token(); ?>"
+       >
 
         <label for="userType">User Type:</label>
         <select name="userType" id="userType" required>

@@ -39,12 +39,37 @@ $categories = $categoryQuery->fetchAll(PDO::FETCH_ASSOC);
 // Check if the form was submitted
 if (isset($_POST['submit'])) {
 
-    // Get form values
-    $categoryID = $_POST['categoryID'];
-    $caption = $_POST['caption'];
+    // Check the CSRF token
+    if (
+        !isset($_POST['csrf_token'])
+        || !verify_csrf_token($_POST['csrf_token'])
+    ) {
+        die("Invalid CSRF token.");
+    }
 
+    // Get form values
+    $categoryID = filter_input(
+        INPUT_POST,
+        'categoryID',
+        FILTER_VALIDATE_INT
+    );
+    $caption = trim($_POST['caption']);
+    // Check if category ID is valid
+if ($categoryID === false || $categoryID === null) {
+    die("Invalid category.");
+}
+
+    // Check if caption is empty
+    if (empty($caption)) {
+        die("Caption is required.");
+    }
     // Get the logged in user ID from the session
     $userID = $_SESSION['userID'];
+
+    try {
+
+    // Start the transaction
+    $dbCon->beginTransaction();
 
     // Create the new post
     $postID = $postObject->createPost(
@@ -59,10 +84,60 @@ if (isset($_POST['submit'])) {
         // Get the uploaded file information
         $fileName = $_FILES['image']['name'];
         $tempName = $_FILES['image']['tmp_name'];
-        $fileType = $_FILES['image']['type'];
+
+    // Get the uploaded file size
+    $fileSize = $_FILES['image']['size'];
+
+    // Maximum file size: 5 MB
+    $maxFileSize = 5 * 1024 * 1024;
+
+    // Check file size
+    if ($fileSize > $maxFileSize) {
+        throw new Exception("Image file is too large.");
+    }
+
+    // Check the real MIME type of the file
+    $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+    $realFileType = finfo_file($fileInfo, $tempName);
+    finfo_close($fileInfo);
+
+    // Allowed image types
+    $allowedTypes = [
+     'image/jpeg' => 'jpg',
+     'image/png' => 'png',
+     'image/webp' => 'webp'
+    ];
+
+    // Check file type
+    if (!isset($allowedTypes[$realFileType]))  {
+        throw new Exception("Only JPEG, PNG and WebP images are allowed.");
+    }
+
+    // Get image dimensions
+    $imageInfo = getimagesize($tempName);
+
+    // Check if the uploaded file is a valid image
+    if ($imageInfo === false) {
+        throw new Exception("Uploaded file is not a valid image.");
+    }
+
+    $imageWidth = $imageInfo[0];
+    $imageHeight = $imageInfo[1];
+
+    // Maximum image dimensions
+    $maxWidth = 2000;
+    $maxHeight = 2000;
+
+    // Check image dimensions
+    if ($imageWidth > $maxWidth || $imageHeight > $maxHeight) {
+        throw new Exception("Image dimensions are too large.");
+    }
+
+
+        
 
         // Create a unique file name
-        $newFileName = time() . "_" . $fileName;
+        $newFileName = bin2hex(random_bytes(16)) . "." . $allowedTypes[$realFileType];
 
         // Create the upload path
         $uploadPath = "uploads/" . $newFileName;
@@ -74,20 +149,34 @@ if (isset($_POST['submit'])) {
             $postObject->addMedia(
                 $postID,
                 $uploadPath,
-                $fileType
+                $realFileType
             );
+
+            // Save the transaction
+            $dbCon->commit();
 
             $message = "Post and image uploaded successfully!";
 
         } else {
 
-            $message = "Post created, but image upload failed.";
+            throw new Exception("Image upload failed.");
         }
 
     } else {
 
-        $message = "Post created, but no image was uploaded.";
+        throw new Exception("No image was uploaded.");
     }
+
+    } catch (Exception $error) {
+
+    // Undo database changes if something failed
+    if ($dbCon->inTransaction()) {
+        $dbCon->rollBack();
+    }
+
+    $message = $error->getMessage();
+}
+
 }
 
 ?>
@@ -106,7 +195,11 @@ if (isset($_POST['submit'])) {
 
     <?php
     if (isset($message)) {
-        echo "<p>" . $message . "</p>";
+       echo "<p>" . htmlspecialchars(
+         $message,
+         ENT_QUOTES,
+         'UTF-8'
+       ) . "</p>";
     }
     ?>
 
@@ -114,6 +207,12 @@ if (isset($_POST['submit'])) {
         action="createPost.php"
         method="post"
         enctype="multipart/form-data"
+    >
+
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="<?php echo csrf_token(); ?>"
     >
 
         <label for="categoryID">Category:</label>
