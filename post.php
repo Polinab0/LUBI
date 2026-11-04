@@ -68,6 +68,33 @@ if (isset($_POST['like'])) {
 }
 
 
+// Delete a post
+if (isset($_POST['deletePost'])) {
+
+    // Check the CSRF token
+    if (
+        !isset($_POST['csrf_token'])
+        || !verify_csrf_token($_POST['csrf_token'])
+    ) {
+        die("Invalid CSRF token.");
+    }
+
+    // Check if the user is allowed to delete the post
+    if (
+        $post['userID'] != $_SESSION['userID']
+        && $_SESSION['userType'] !== 'admin'
+    ) {
+        die("You are not allowed to delete this post.");
+    }
+
+    // Delete the post
+    $postObject->deletePost($postID);
+
+    // Redirect back to the feed
+    header("Location: index.php");
+    exit();
+}
+
 // Add a comment
 if (isset($_POST['addComment'])) {
 
@@ -180,6 +207,34 @@ $comments = $commentObject->getComments($postID);
             >
 
         </form>
+
+        <?php if (
+             $post['userID'] == $_SESSION['userID']
+             || $_SESSION['userType'] === 'admin'
+        ) { ?>
+
+        <form
+        action="post.php?postID=<?php echo $postID; ?>"
+        method="post"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?php echo csrf_token(); ?>"
+            >
+
+            <input
+                type="submit"
+                name="deletePost"
+                value="Delete Post"
+            >
+
+        </form>
+
+       <?php } ?>
+
+           
 
         <p>
             Comments:

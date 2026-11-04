@@ -70,6 +70,7 @@ class Post {
         $query = $this->dbCon->prepare(
             "SELECT
                 post.postID,
+                post.userID,
                 post.caption,
                 post.createdAt,
                 user.username,
@@ -101,6 +102,7 @@ class Post {
         $query = $this->dbCon->prepare(
             "SELECT
                 post.postID,
+                post.userID,
                 post.caption,
                 post.createdAt,
                 user.username,
@@ -215,6 +217,7 @@ public function getNewestPosts($limit = 4) {
     $query = $this->dbCon->prepare(
         "SELECT
             post.postID,
+            post.userID,
             post.caption,
             post.createdAt,
             user.username,
@@ -244,6 +247,70 @@ public function getNewestPosts($limit = 4) {
 
     // Return the newest posts
     return $query->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Delete a post
+public function deletePost($postID) {
+
+    try {
+
+        // Start transaction
+        $this->dbCon->beginTransaction();
+
+        // Delete saved posts
+        $query = $this->dbCon->prepare(
+            "DELETE FROM saved_post
+            WHERE postID = :postID"
+        );
+        $query->bindParam(':postID', $postID);
+        $query->execute();
+
+        // Delete likes
+        $query = $this->dbCon->prepare(
+            "DELETE FROM post_like
+            WHERE postID = :postID"
+        );
+        $query->bindParam(':postID', $postID);
+        $query->execute();
+
+        // Delete comments
+        $query = $this->dbCon->prepare(
+            "DELETE FROM comment
+            WHERE postID = :postID"
+        );
+        $query->bindParam(':postID', $postID);
+        $query->execute();
+
+        // Delete media
+        $query = $this->dbCon->prepare(
+            "DELETE FROM media
+            WHERE postID = :postID"
+        );
+        $query->bindParam(':postID', $postID);
+        $query->execute();
+
+        // Delete the post
+        $query = $this->dbCon->prepare(
+            "DELETE FROM post
+            WHERE postID = :postID"
+        );
+        $query->bindParam(':postID', $postID);
+        $query->execute();
+
+        // Save all changes
+        $this->dbCon->commit();
+
+        return true;
+
+    } catch (Exception $error) {
+
+        // Undo all changes if something fails
+        if ($this->dbCon->inTransaction()) {
+            $this->dbCon->rollBack();
+        }
+
+        return false;
+    }
 }
 
 
