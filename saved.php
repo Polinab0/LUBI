@@ -1,3 +1,4 @@
+
 <?php
 
 // Show PHP errors for debugging
@@ -22,6 +23,9 @@ $dbCon = $database->connect();
 // Get the logged in user's ID
 $userID = $_SESSION['userID'];
 
+// TEMPORARY: Check which user is logged in
+echo "Current user ID: " . $userID;
+
 // Get the posts saved by this user
 $query = $dbCon->prepare(
     "SELECT post.postID, post.caption, user.username,
@@ -34,9 +38,13 @@ $query = $dbCon->prepare(
      WHERE saved_post.userID = :userID"
 );
 
-$query->bindParam(':userID', $userID);
+// Bind the logged in user's ID
+$query->bindValue(':userID', $userID, PDO::PARAM_INT);
+
+// Run the query
 $query->execute();
 
+// Get the saved posts
 $savedPosts = $query->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
@@ -60,21 +68,27 @@ $savedPosts = $query->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach ($savedPosts as $post) { ?>
 
             <div>
-                <h3><?php echo htmlspecialchars($post['username']); ?></h3>
+                <h3>
+                    <?php echo htmlspecialchars($post['username']); ?>
+                </h3>
 
                 <p>
                     Category:
                     <?php echo htmlspecialchars($post['categoryName']); ?>
                 </p>
 
-                <p><?php echo htmlspecialchars($post['caption']); ?></p>
+                <p>
+                    <?php echo htmlspecialchars($post['caption']); ?>
+                </p>
 
                 <?php if (!empty($post['file'])) { ?>
+
                     <img
                         src="<?php echo htmlspecialchars($post['file']); ?>"
                         width="250"
                         alt="Saved post image"
                     >
+
                 <?php } ?>
 
                 <p>
@@ -96,4 +110,4 @@ $savedPosts = $query->fetchAll(PDO::FETCH_ASSOC);
 
 </body>
 
-</html> 
+</html>

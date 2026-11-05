@@ -1,3 +1,4 @@
+
 <?php
 
 // Include the session functions
@@ -25,11 +26,18 @@ $dbCon = $database->connect();
 $postObject = new Post($dbCon);
 $commentObject = new Comment($dbCon);
 
+// Get the logged in user's ID
+$userID = $_SESSION['userID'];
+
 // Check if postID exists in the URL
 if (isset($_GET['postID'])) {
 
     // Get the post ID from the URL
-    $postID = filter_input(INPUT_GET, 'postID', FILTER_VALIDATE_INT);
+    $postID = filter_input(
+        INPUT_GET,
+        'postID',
+        FILTER_VALIDATE_INT
+    );
 
     if (!$postID) {
         header("Location: index.php");
@@ -51,14 +59,11 @@ if (isset($_POST['like'])) {
 
     // Check the CSRF token
     if (
-        !isset($_POST['csrf_token'])
-        || !verify_csrf_token($_POST['csrf_token'])
+        !isset($_POST['csrf_token']) ||
+        !verify_csrf_token($_POST['csrf_token'])
     ) {
         die("Invalid CSRF token.");
     }
-
-    // Get the logged in user ID
-    $userID = $_SESSION['userID'];
 
     // Add the like
     $postObject->likePost(
@@ -71,22 +76,26 @@ if (isset($_POST['like'])) {
     exit();
 }
 
-
 // Delete a post
 if (isset($_POST['deletePost'])) {
 
     // Check the CSRF token
     if (
-        !isset($_POST['csrf_token'])
-        || !verify_csrf_token($_POST['csrf_token'])
+        !isset($_POST['csrf_token']) ||
+        !verify_csrf_token($_POST['csrf_token'])
     ) {
         die("Invalid CSRF token.");
     }
 
+    // Check if the post exists
+    if (!$post) {
+        die("Post not found.");
+    }
+
     // Check if the user is allowed to delete the post
     if (
-        $post['userID'] != $_SESSION['userID']
-        && $_SESSION['userType'] !== 'admin'
+        $post['userID'] != $userID &&
+        $_SESSION['userType'] !== 'admin'
     ) {
         die("You are not allowed to delete this post.");
     }
@@ -104,17 +113,14 @@ if (isset($_POST['addComment'])) {
 
     // Check the CSRF token
     if (
-        !isset($_POST['csrf_token'])
-        || !verify_csrf_token($_POST['csrf_token'])
+        !isset($_POST['csrf_token']) ||
+        !verify_csrf_token($_POST['csrf_token'])
     ) {
         die("Invalid CSRF token.");
     }
 
-    // Get the logged in user ID
-    $userID = $_SESSION['userID'];
-
     // Get the comment text
-    $commentText = trim($_POST['commentText']);
+    $commentText = trim($_POST['commentText'] ?? '');
 
     // Check if the comment is empty
     if (empty($commentText)) {
@@ -132,6 +138,21 @@ if (isset($_POST['addComment'])) {
     header("Location: post.php?postID=" . $postID);
     exit();
 }
+
+// Check if this post is saved by the logged in user
+$query = $dbCon->prepare(
+    "SELECT postID FROM saved_post
+     WHERE userID = :userID
+     AND postID = :postID"
+);
+
+$query->execute([
+    ':userID' => $userID,
+    ':postID' => $postID
+]);
+
+// True if the current user has saved this post
+$isSaved = $query->fetch(PDO::FETCH_ASSOC) !== false;
 
 // Get like count
 $likeCount = $postObject->getLikeCount($postID);
@@ -164,19 +185,31 @@ $comments = $commentObject->getComments($postID);
 
         <h2>
             <strong>
-                <?php echo htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php echo htmlspecialchars(
+                    $post['username'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
             </strong>
         </h2>
 
         <p>
             Category:
-            <?php echo htmlspecialchars($post['categoryName'], ENT_QUOTES, 'UTF-8'); ?>
+            <?php echo htmlspecialchars(
+                $post['categoryName'],
+                ENT_QUOTES,
+                'UTF-8'
+            ); ?>
         </p>
 
         <?php if (!empty($post['file'])) { ?>
 
             <img
-                src="<?php echo htmlspecialchars($post['file'], ENT_QUOTES, 'UTF-8'); ?>"
+                src="<?php echo htmlspecialchars(
+                    $post['file'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>"
                 alt="Post image"
                 width="500"
             >
@@ -184,7 +217,11 @@ $comments = $commentObject->getComments($postID);
         <?php } ?>
 
         <p>
-            <?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?>
+            <?php echo htmlspecialchars(
+                $post['caption'],
+                ENT_QUOTES,
+                'UTF-8'
+            ); ?>
         </p>
 
         <!-- Save or unsave this post -->
@@ -193,19 +230,23 @@ $comments = $commentObject->getComments($postID);
             <input
                 type="hidden"
                 name="postID"
-                value="<?php echo htmlspecialchars($postID); ?>"
+                value="<?php echo $postID; ?>"
             >
 
             <!-- CSRF protection -->
             <input
                 type="hidden"
                 name="csrf_token"
-                value="<?php echo htmlspecialchars(csrf_token()); ?>"
+                value="<?php echo htmlspecialchars(
+                    csrf_token(),
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>"
             >
 
             <input
                 type="submit"
-                value="Save / Unsave"
+                value="<?php echo $isSaved ? 'Unsave Post' : 'Save Post'; ?>"
             >
 
         </form>
@@ -215,6 +256,7 @@ $comments = $commentObject->getComments($postID);
             <?php echo $likeCount; ?>
         </p>
 
+        <!-- Like the post -->
         <form
             action="post.php?postID=<?php echo $postID; ?>"
             method="post"
@@ -223,8 +265,13 @@ $comments = $commentObject->getComments($postID);
             <input
                 type="hidden"
                 name="csrf_token"
-                value="<?php echo csrf_token(); ?>"
+                value="<?php echo htmlspecialchars(
+                    csrf_token(),
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>"
             >
+
             <input
                 type="submit"
                 name="like"
@@ -233,33 +280,36 @@ $comments = $commentObject->getComments($postID);
 
         </form>
 
+        <!-- Show delete button to owner or admin -->
         <?php if (
-             $post['userID'] == $_SESSION['userID']
-             || $_SESSION['userType'] === 'admin'
+            $post['userID'] == $userID ||
+            $_SESSION['userType'] === 'admin'
         ) { ?>
 
-        <form
-        action="post.php?postID=<?php echo $postID; ?>"
-        method="post"
-        >
-
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?php echo csrf_token(); ?>"
+            <form
+                action="post.php?postID=<?php echo $postID; ?>"
+                method="post"
             >
 
-            <input
-                type="submit"
-                name="deletePost"
-                value="Delete Post"
-            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="<?php echo htmlspecialchars(
+                        csrf_token(),
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
+                >
 
-        </form>
+                <input
+                    type="submit"
+                    name="deletePost"
+                    value="Delete Post"
+                >
 
-       <?php } ?>
+            </form>
 
-           
+        <?php } ?>
 
         <p>
             Comments:
@@ -275,7 +325,11 @@ $comments = $commentObject->getComments($postID);
             <input
                 type="hidden"
                 name="csrf_token"
-                value="<?php echo csrf_token(); ?>"
+                value="<?php echo htmlspecialchars(
+                    csrf_token(),
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>"
             >
 
             <input
@@ -299,13 +353,19 @@ $comments = $commentObject->getComments($postID);
         <?php foreach ($comments as $comment) { ?>
 
             <p>
-
                 <strong>
-                    <?php echo htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(
+                        $comment['username'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>
                 </strong>
 
-                <?php echo htmlspecialchars($comment['text'], ENT_QUOTES, 'UTF-8'); ?>
-
+                <?php echo htmlspecialchars(
+                    $comment['text'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
             </p>
 
         <?php } ?>
