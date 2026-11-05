@@ -1,3 +1,4 @@
+
 <?php
 
 class User {
@@ -70,6 +71,11 @@ class User {
 
         // Check if the user exists
         if ($foundUser) {
+
+            // Check if the user is blocked
+            if ($foundUser['isBlocked'] == 1) {
+                return false;
+            }
 
             // Check if the password is correct
             if (password_verify(
