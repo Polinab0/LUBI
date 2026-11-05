@@ -15,7 +15,6 @@ require_once "classes/Post.php";
 // Include the Comment class
 require_once "classes/Comment.php";
 
-
 // Create the Database object
 $database = new Database();
 
@@ -30,7 +29,12 @@ $commentObject = new Comment($dbCon);
 if (isset($_GET['postID'])) {
 
     // Get the post ID from the URL
-    $postID = $_GET['postID'];
+    $postID = filter_input(INPUT_GET, 'postID', FILTER_VALIDATE_INT);
+
+    if (!$postID) {
+        header("Location: index.php");
+        exit();
+    }
 
     // Get the post from the database
     $post = $postObject->getPostById($postID);
@@ -41,7 +45,6 @@ if (isset($_GET['postID'])) {
     header("Location: index.php");
     exit();
 }
-
 
 // Add a like
 if (isset($_POST['like'])) {
@@ -59,7 +62,6 @@ if (isset($_POST['like'])) {
     header("Location: post.php?postID=" . $postID);
     exit();
 }
-
 
 // Add a comment
 if (isset($_POST['addComment'])) {
@@ -81,7 +83,6 @@ if (isset($_POST['addComment'])) {
     header("Location: post.php?postID=" . $postID);
     exit();
 }
-
 
 // Get like count
 $likeCount = $postObject->getLikeCount($postID);
@@ -113,18 +114,18 @@ $comments = $commentObject->getComments($postID);
     <?php if ($post) { ?>
 
         <h2>
-            <?php echo $post['username']; ?>
+            <?php echo htmlspecialchars($post['username']); ?>
         </h2>
 
         <p>
             Category:
-            <?php echo $post['categoryName']; ?>
+            <?php echo htmlspecialchars($post['categoryName']); ?>
         </p>
 
         <?php if (!empty($post['file'])) { ?>
 
             <img
-                src="<?php echo $post['file']; ?>"
+                src="<?php echo htmlspecialchars($post['file']); ?>"
                 alt="Post image"
                 width="500"
             >
@@ -132,15 +133,23 @@ $comments = $commentObject->getComments($postID);
         <?php } ?>
 
         <p>
-            <?php echo $post['caption']; ?>
+            <?php echo htmlspecialchars($post['caption']); ?>
         </p>
+
         <!-- Save or unsave this post -->
         <form action="savePost.php" method="post">
 
             <input
                 type="hidden"
                 name="postID"
-                value="<?php echo $postID; ?>"
+                value="<?php echo htmlspecialchars($postID); ?>"
+            >
+
+            <!-- CSRF protection -->
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?php echo htmlspecialchars(csrf_token()); ?>"
             >
 
             <input
@@ -149,11 +158,13 @@ $comments = $commentObject->getComments($postID);
             >
 
         </form>
+
         <p>
             Likes:
             <?php echo $likeCount; ?>
         </p>
 
+        <!-- Like button -->
         <form
             action="post.php?postID=<?php echo $postID; ?>"
             method="post"
@@ -172,6 +183,7 @@ $comments = $commentObject->getComments($postID);
             <?php echo $commentCount; ?>
         </p>
 
+        <!-- Add a comment -->
         <form
             action="post.php?postID=<?php echo $postID; ?>"
             method="post"
@@ -194,15 +206,16 @@ $comments = $commentObject->getComments($postID);
 
         <h3>Comments</h3>
 
+        <!-- Display comments -->
         <?php foreach ($comments as $comment) { ?>
 
             <p>
 
                 <strong>
-                    <?php echo $comment['username']; ?>:
+                    <?php echo htmlspecialchars($comment['username']); ?>:
                 </strong>
 
-                <?php echo $comment['text']; ?>
+                <?php echo htmlspecialchars($comment['text']); ?>
 
             </p>
 
