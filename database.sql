@@ -1,3 +1,4 @@
+
 -- Create the LUBI database
 CREATE DATABASE IF NOT EXISTS LUBI;
 
@@ -14,6 +15,7 @@ CREATE TABLE user (
     email VARCHAR(100) NOT NULL,
     city VARCHAR(100),
     bio VARCHAR(255),
+    isBlocked TINYINT(1) NOT NULL DEFAULT 0,
 
     PRIMARY KEY (userID)
 ) ENGINE=InnoDB;

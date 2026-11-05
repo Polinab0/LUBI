@@ -170,7 +170,7 @@ $newestPosts = $postObject->getNewestPosts();
         </a>
 
         <a href="profile.php">
-            <?php echo $_SESSION['username']; ?>
+            <?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?>
         </a>
 
         <a href="logout.php">
@@ -252,7 +252,7 @@ $newestPosts = $postObject->getNewestPosts();
             <?php if (!empty($posts) && !empty($posts[0]['file'])) { ?>
 
                 <img
-                    src="<?php echo $posts[0]['file']; ?>"
+                    src="<?php echo htmlspecialchars($posts[0]['file'], ENT_QUOTES, 'UTF-8'); ?>"
                     alt="Featured beauty work"
                 >
 
@@ -269,7 +269,7 @@ $newestPosts = $postObject->getNewestPosts();
 
                     <?php
                     if (!empty($posts)) {
-                        echo $posts[0]['caption'];
+                        echo htmlspecialchars($posts[0]['caption'], ENT_QUOTES, 'UTF-8');
                     }
                     ?>
 
@@ -328,7 +328,7 @@ $newestPosts = $postObject->getNewestPosts();
                       ?>
                   "
               >
-                     <?php echo $category['name']; ?>
+                     <?php echo htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8'); ?>
                      </a>
 
     <?php } ?>
@@ -406,7 +406,7 @@ $newestPosts = $postObject->getNewestPosts();
                         >
 
                             <img
-                                src="<?php echo $post['file']; ?>"
+                                src="<?php echo htmlspecialchars($post['file'], ENT_QUOTES, 'UTF-8'); ?>"
                                 alt="Beauty post"
                             >
 
@@ -419,11 +419,11 @@ $newestPosts = $postObject->getNewestPosts();
 
                         <span>
 
-                            <?php echo $post['categoryName']; ?>
+                            <?php echo htmlspecialchars($post['categoryName'], ENT_QUOTES, 'UTF-8'); ?>
 
                             /
 
-                            <?php echo $post['username']; ?>
+                            <?php echo htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8'); ?>
 
                         </span>
 
@@ -435,7 +435,7 @@ $newestPosts = $postObject->getNewestPosts();
                         class="post-card-title"
                     >
 
-                        <?php echo $post['caption']; ?>
+                        <?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?>
 
                         <span>
                             ↗
@@ -517,11 +517,11 @@ $newestPosts = $postObject->getNewestPosts();
                 <article class="latest-comment">
 
                     <div class="latest-comment-user">
-                        <?php echo $comment['username']; ?>
+                        <?php echo htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8'); ?>
                     </div>
 
                     <p>
-                        <?php echo $comment['text']; ?>
+                        <?php echo htmlspecialchars($comment['text'], ENT_QUOTES, 'UTF-8'); ?>
                     </p>
 
                     <a
@@ -583,7 +583,7 @@ $newestPosts = $postObject->getNewestPosts();
                             href="post.php?postID=<?php echo $post['postID']; ?>"
                         >
                             <img
-                                src="<?php echo $post['file']; ?>"
+                                src="<?php echo htmlspecialchars($post['file'], ENT_QUOTES, 'UTF-8'); ?>"
                                 alt="Newest beauty post"
                             >
                         </a>
@@ -592,11 +592,11 @@ $newestPosts = $postObject->getNewestPosts();
 
                     <div class="newest-picture-meta">
 
-                        <?php echo $post['categoryName']; ?>
+                        <?php echo htmlspecialchars($post['categoryName'], ENT_QUOTES, 'UTF-8'); ?>
 
                         /
 
-                        <?php echo $post['username']; ?>
+                        <?php echo htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8'); ?>
 
                     </div>
 
@@ -604,7 +604,7 @@ $newestPosts = $postObject->getNewestPosts();
                         href="post.php?postID=<?php echo $post['postID']; ?>"
                         class="newest-picture-title"
                     >
-                        <?php echo $post['caption']; ?>
+                        <?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?>
                     </a>
 
                 </article>

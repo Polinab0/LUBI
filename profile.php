@@ -51,27 +51,27 @@ $allPosts = $postObject->getAllPosts();
     <h1>Profile</h1>
 
     <h2>
-        <?php echo $currentUser['username']; ?>
+        <?php echo htmlspecialchars($currentUser['username'], ENT_QUOTES, 'UTF-8'); ?>
     </h2>
 
     <p>
         User type:
-        <?php echo $currentUser['userType']; ?>
+        <?php echo htmlspecialchars($currentUser['userType'], ENT_QUOTES, 'UTF-8'); ?>
     </p>
 
     <p>
         Email:
-        <?php echo $currentUser['email']; ?>
+        <?php echo htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8'); ?>
     </p>
 
     <p>
         City:
-        <?php echo $currentUser['city']; ?>
+        <?php echo htmlspecialchars($currentUser['city'], ENT_QUOTES, 'UTF-8'); ?>
     </p>
 
     <p>
         Bio:
-        <?php echo $currentUser['bio']; ?>
+        <?php echo htmlspecialchars($currentUser['bio'], ENT_QUOTES, 'UTF-8'); ?>
     </p>
 
     <a href="editProfile.php">
@@ -90,7 +90,7 @@ $allPosts = $postObject->getAllPosts();
 
                 <p>
                     Category:
-                    <?php echo $post['categoryName']; ?>
+                    <?php echo htmlspecialchars($post['categoryName'], ENT_QUOTES, 'UTF-8'); ?>
                 </p>
 
                 <?php if (!empty($post['file'])) { ?>
@@ -98,7 +98,7 @@ $allPosts = $postObject->getAllPosts();
                     <a href="post.php?postID=<?php echo $post['postID']; ?>">
 
                         <img
-                            src="<?php echo $post['file']; ?>"
+                            src="<?php echo htmlspecialchars($post['file'], ENT_QUOTES, 'UTF-8'); ?>"
                             alt="Post image"
                             width="250"
                         >
@@ -108,7 +108,7 @@ $allPosts = $postObject->getAllPosts();
                 <?php } ?>
 
                 <p>
-                    <?php echo $post['caption']; ?>
+                    <?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?>
                 </p>
 
             </div>
