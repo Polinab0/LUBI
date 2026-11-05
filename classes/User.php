@@ -149,4 +149,23 @@ class User {
         // Execute the query
         return $query->execute();
     }
+    // Block or unblock a regular user
+    public function setBlockedStatus($userID, $isBlocked) {
+
+        // Prepare the SQL query
+        $query = $this->dbCon->prepare(
+            "UPDATE user
+             SET isBlocked = :isBlocked
+             WHERE userID = :userID
+             AND userType != 'admin'"
+        );
+
+        // Bind the values
+        $query->bindValue(':isBlocked', $isBlocked, PDO::PARAM_INT);
+        $query->bindValue(':userID', $userID, PDO::PARAM_INT);
+
+        // Execute the query
+        return $query->execute();
+    }
+
 }

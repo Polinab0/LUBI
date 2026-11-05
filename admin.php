@@ -19,11 +19,14 @@ if (!isset($_SESSION['userType']) || $_SESSION['userType'] != 'admin') {
 // Connect to the database
 require_once 'dbcon.php';
 require_once 'classes/Post.php';
+require_once 'classes/User.php';
 
 $database = new Database();
 $dbCon = $database->connect();
 
+// Create objects
 $postObject = new Post($dbCon);
+$userObject = new User($dbCon);
 
 // Handle admin actions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -67,18 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Set blocked status
         $isBlocked = isset($_POST['blockUser']) ? 1 : 0;
 
-        // Only regular users can be blocked or unblocked
-        $query = $dbCon->prepare(
-            "UPDATE user
-             SET isBlocked = :isBlocked
-             WHERE userID = :userID
-             AND userType != 'admin'"
-        );
-
-        $query->bindValue(':isBlocked', $isBlocked, PDO::PARAM_INT);
-        $query->bindValue(':userID', $userID, PDO::PARAM_INT);
-
-        $query->execute();
+        // Use the User class to block or unblock
+        if (!$userObject->setBlockedStatus($userID, $isBlocked)) {
+            die("Could not update the user.");
+        }
     }
 
     // Refresh the admin page
