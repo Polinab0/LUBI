@@ -14,7 +14,6 @@ function confirm_logged_in() {
 
     if (!logged_in()) {
 
-        // Redirect to login page
         header("Location: login.php");
         exit();
     }

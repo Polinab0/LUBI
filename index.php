@@ -165,7 +165,7 @@ $newestPosts = $postObject->getNewestPosts();
 
     <div class="header-right">
 
-        <a href="#">
+    <a href="saved.php">
             Saved
         </a>
 

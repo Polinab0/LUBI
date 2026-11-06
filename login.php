@@ -1,3 +1,4 @@
+
 <?php
 
 // Include the database connection
@@ -22,21 +23,21 @@ $userObject = new User($dbCon);
 if (isset($_POST['submit'])) {
 
     // Check the CSRF token
-if (
-    !isset($_POST['csrf_token'])
-    || !verify_csrf_token($_POST['csrf_token'])
-) {
-    die("Invalid CSRF token.");
-}
+    if (
+        !isset($_POST['csrf_token']) ||
+        !verify_csrf_token($_POST['csrf_token'])
+    ) {
+        die("Invalid CSRF token.");
+    }
 
     // Get the form values
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
     // Check if email is valid
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    die("Email is not valid.");
-}
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        die("Email is not valid.");
+    }
 
     // Try to login the user
     $foundUser = $userObject->login(
@@ -47,7 +48,17 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     // Check if login was successful
     if ($foundUser) {
 
-        // Save user information in the session
+        // Create a new session ID for security
+        session_regenerate_id(true);
+
+        // Clear old login information
+        unset(
+            $_SESSION['userID'],
+            $_SESSION['username'],
+            $_SESSION['userType']
+        );
+
+        // Save the correct user's information
         $_SESSION['userID'] = $foundUser['userID'];
         $_SESSION['username'] = $foundUser['username'];
         $_SESSION['userType'] = $foundUser['userType'];
@@ -78,19 +89,21 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
     <?php
     if (isset($message)) {
-    echo "<p>" . htmlspecialchars(
-        $message,
-        ENT_QUOTES,
-        'UTF-8'
-    ) . "</p>";
+        echo "<p>" . htmlspecialchars(
+            $message,
+            ENT_QUOTES,
+            'UTF-8'
+        ) . "</p>";
     }
     ?>
 
     <form action="login.php" method="post">
+
         <input
-           type="hidden"
-           name="csrf_token"
-           value="<?php echo csrf_token(); ?>">
+            type="hidden"
+            name="csrf_token"
+            value="<?php echo csrf_token(); ?>"
+        >
 
         <label for="email">Email:</label>
         <input
