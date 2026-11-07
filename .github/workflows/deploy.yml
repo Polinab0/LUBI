@@ -40,12 +40,11 @@ jobs:
             '];' \
             > config.php
 
-      - name: Deploy to Simply.com using FTPS
+      - name: Deploy to Simply.com using FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ftp.simply.com
           port: 21
-          protocol: ftps
           username: ${{ secrets.SIMPLY_FTP_USERNAME }}
           password: ${{ secrets.SIMPLY_FTP_PASSWORD }}
           local-dir: ./
