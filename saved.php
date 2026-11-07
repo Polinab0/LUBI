@@ -1,4 +1,3 @@
-
 <?php
 
 // Show PHP errors for debugging

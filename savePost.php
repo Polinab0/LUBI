@@ -1,4 +1,3 @@
-
 <?php
 
 // Include session functions
