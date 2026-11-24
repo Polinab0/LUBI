@@ -39,6 +39,14 @@ $categories = $categoryQuery->fetchAll(PDO::FETCH_ASSOC);
 // Check if the form was submitted
 if (isset($_POST['submit'])) {
 
+    // Prevent post spam
+    if (
+      isset($_SESSION['last_post_time'])
+      && time() - $_SESSION['last_post_time'] < 3
+    ) {
+        die("Please wait a few seconds before creating another post.");
+    }
+
     // Check the CSRF token
     if (
         !isset($_POST['csrf_token'])
@@ -125,8 +133,8 @@ if ($categoryID === false || $categoryID === null) {
     $imageHeight = $imageInfo[1];
 
     // Maximum image dimensions
-    $maxWidth = 2000;
-    $maxHeight = 2000;
+    $maxWidth = 4200;
+    $maxHeight = 4200;
 
     // Check image dimensions
     if ($imageWidth > $maxWidth || $imageHeight > $maxHeight) {
@@ -155,7 +163,11 @@ if ($categoryID === false || $categoryID === null) {
             // Save the transaction
             $dbCon->commit();
 
-            $message = "Post and image uploaded successfully!";
+            // Save the time of the last created post
+            $_SESSION['last_post_time'] = time();
+
+            header("Location: post.php?postID=" . $postID);
+            exit();
 
         } else {
 
