@@ -1,9 +1,5 @@
 <?php
 
-// Show PHP errors for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Include the session functions
 require_once "includes/session.php";
 
