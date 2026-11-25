@@ -1,7 +1,9 @@
+
 <?php
 
 // Include the database connection
 require_once "dbcon.php";
+
 // Include the session functions
 require_once "includes/session.php";
 
@@ -17,72 +19,71 @@ $dbCon = $database->connect();
 // Create a User object
 $userObject = new User($dbCon);
 
+$message = "";
+
 // Check if the registration form was submitted
 if (isset($_POST['submit'])) {
+
     // Check the CSRF token
-if (
-    !isset($_POST['csrf_token'])
-    || !verify_csrf_token($_POST['csrf_token'])
-) {
-    die("Invalid CSRF token.");
-}
+    if (
+        !isset($_POST['csrf_token']) ||
+        !verify_csrf_token($_POST['csrf_token'])
+    ) {
+        die("Invalid CSRF token.");
+    }
 
     // Get form values
-    $userType = $_POST['userType'];
+    $userType = $_POST['userType'] ?? '';
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $email = trim($_POST['email'] ?? '');
+    $city = trim($_POST['city'] ?? '');
+    $bio = trim($_POST['bio'] ?? '');
+
     // Check if user type is valid
-    $allowedUserTypes = [
-        'learner',
-        'professional'
-    ];
+    $allowedUserTypes = ['learner', 'professional'];
 
-if (!in_array($userType, $allowedUserTypes)) {
-    die("Invalid user type.");
+    if (!in_array($userType, $allowedUserTypes, true)) {
+        $message = "Invalid user type.";
+
+    } elseif (empty($username)) {
+        $message = "Username is required.";
+
+    } elseif (empty($email)) {
+        $message = "Email is required.";
+
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "Email is not valid.";
+
+    } elseif (strlen($password) < 8) {
+        $message = "Password must be at least 8 characters.";
+
+    } elseif (strlen($bio) > 500) {
+        $message = "Bio cannot be longer than 500 characters.";
+
+    } else {
+
+        // Register the new user
+        try {
+            $userObject->register(
+                $userType,
+                $username,
+                $password,
+                $email,
+                $city,
+                $bio
+            );
+
+            // Redirect to login
+            header("Location: login.php");
+            exit();
+
+        } catch (PDOException $e) {
+            $message = "Could not create account. Please check your details or try another email.";
+        }
+    }
 }
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-    $email = trim($_POST['email']);
-    $city = trim($_POST['city']);
-    $bio = trim($_POST['bio']);
 
-    // Check if username is empty
-if (empty($username)) {
-    die("Username is required.");
-}
-
-// Check if email is empty
-if (empty($email)) {
-    die("Email is required.");
-}
-
-// Check if email is valid
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    die("Email is not valid.");
-}
-
-// Check password length
-if (strlen($password) < 8) {
-    die("Password must be at least 8 characters.");
-}
-
-// Check bio length
-if (strlen($bio) > 500) {
-    die("Bio cannot be longer than 500 characters.");
-}
-
-// Register the new user
-$userObject->register(
-    $userType,
-    $username,
-    $password,
-        $email,
-        $city,
-        $bio
-    );
-
-    // Redirect to the login page after registration
-    header("Location: login.php");
-    exit();
-}
 ?>
 
 <!DOCTYPE html>
@@ -90,87 +91,131 @@ $userObject->register(
 
 <head>
     <meta charset="UTF-8">
-    <title>LUBI - Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>LUBI - Sign Up</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
 </head>
 
-<body>
+<body class="register-page">
 
-    <h1>Create Account</h1>
+    <main class="register-container">
 
-    <form action="register.php" method="post">
+        <section class="register-card">
 
-       <input
-          type="hidden"
-          name="csrf_token"
-          value="<?php echo csrf_token(); ?>"
-       >
+            <a href="index.php" class="register-logo">LUBI.</a>
 
-        <label for="userType">User Type:</label>
-        <select name="userType" id="userType" required>
-            <option value="learner">Learner</option>
-            <option value="professional">Professional</option>
-        </select>
+            <p class="register-tagline">
+                Create. Learn. Grow. In Beauty.
+            </p>
 
-        <br><br>
+            <h1>Create Account</h1>
 
-        <label for="username">Username:</label>
-        <input
-            type="text"
-            name="username"
-            id="username"
-            required
-        >
+            <p class="register-subtitle">
+                Join our beauty community and start your journey.
+            </p>
 
-        <br><br>
+            <?php if (!empty($message)): ?>
+                <p class="register-error">
+                    <?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?>
+                </p>
+            <?php endif; ?>
 
-        <label for="email">Email:</label>
-        <input
-            type="email"
-            name="email"
-            id="email"
-            required
-        >
+            <form action="register.php" method="post">
 
-        <br><br>
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8'); ?>"
+                >
 
-        <label for="password">Password:</label>
-        <input
-            type="password"
-            name="password"
-            id="password"
-            required
-        >
+                <label for="userType">I want to join as</label>
 
-        <br><br>
+                <select name="userType" id="userType" required>
+                    <option value="learner" <?php echo (($userType ?? '') === 'learner') ? 'selected' : ''; ?>>
+                        Learner
+                    </option>
 
-        <label for="city">City:</label>
-        <input
-            type="text"
-            name="city"
-            id="city"
-        >
+                    <option value="professional" <?php echo (($userType ?? '') === 'professional') ? 'selected' : ''; ?>>
+                        Professional
+                    </option>
+                </select>
 
-        <br><br>
+                <label for="username">Username</label>
 
-        <label for="bio">Bio:</label>
-        <textarea
-            name="bio"
-            id="bio"
-        ></textarea>
+                <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    maxlength="100"
+                    value="<?php echo htmlspecialchars($username ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                    required
+                >
 
-        <br><br>
+                <label for="email">Email Address</label>
 
-        <input
-            type="submit"
-            name="submit"
-            value="Sign Up"
-        >
+                <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    value="<?php echo htmlspecialchars($email ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                    required
+                >
 
-    </form>
+                <label for="password">Password</label>
 
-    <br>
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
 
-    <a href="login.php">Already have an account? Login</a>
+                <p class="register-hint">
+                    Minimum 8 characters.
+                </p>
+
+                <label for="city">City</label>
+
+                <input
+                    type="text"
+                    name="city"
+                    id="city"
+                    value="<?php echo htmlspecialchars($city ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                >
+
+                <label for="bio">About You (Optional)</label>
+
+                <textarea
+                    name="bio"
+                    id="bio"
+                    rows="4"
+                    maxlength="500"
+                    placeholder="Tell us a little about yourself..."
+                ><?php echo htmlspecialchars($bio ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+
+                <button type="submit" name="submit">
+                    Create Account
+                </button>
+
+            </form>
+
+            <p class="register-login">
+                Already have an account?
+                <a href="login.php">Log In</a>
+            </p>
+
+            <a href="index.php" class="register-back">
+                Back to Home
+            </a>
+
+        </section>
+
+    </main>
 
 </body>
 
