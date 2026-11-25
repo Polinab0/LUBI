@@ -766,3 +766,189 @@ h3 {
     }
 
 }
+
+
+/* ===================================
+   LUBI Admin Panel
+=================================== */
+
+.admin-page {
+    padding: 70px 0 110px;
+}
+
+.admin-heading {
+    margin-bottom: 45px;
+}
+
+.admin-heading h1 {
+    margin: 15px 0;
+    font-size: clamp(42px, 5vw, 68px);
+}
+
+.admin-heading p {
+    color: #777974;
+    font-size: 14px;
+}
+
+/* Dashboard overview */
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 70px;
+}
+
+.admin-stat-card {
+    padding: 32px;
+    background: #e9ebe1;
+}
+
+.admin-stat-card span {
+    display: block;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: #666960;
+}
+
+.admin-stat-card strong {
+    font-family: 'Manrope', sans-serif;
+    font-size: 48px;
+    font-weight: 600;
+}
+
+/* Admin sections */
+
+.admin-section {
+    margin-bottom: 70px;
+}
+
+.admin-section h2 {
+    margin-bottom: 25px;
+    font-size: 32px;
+}
+
+.admin-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-table th {
+    padding: 17px 20px;
+    background: #e9ebe1;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.admin-table td {
+    padding: 20px;
+    border-bottom: 1px solid #deded8;
+    font-size: 13px;
+}
+
+.admin-table tr:hover td {
+    background: #f0f1e9;
+}
+
+/* Admin action buttons */
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-actions form {
+    margin: 0;
+}
+
+.admin-btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    background: #22241e;
+    color: white;
+}
+
+.admin-btn:hover {
+    background: #536429;
+}
+
+.admin-btn-danger {
+    background: #a44949;
+}
+
+.admin-btn-danger:hover {
+    background: #833333;
+}
+
+.admin-btn-secondary {
+    background: #dfe5ce;
+    color: #22241e;
+}
+
+.admin-btn-secondary:hover {
+    background: #cbd8aa;
+}
+
+/* Admin footer navigation */
+
+.admin-footer {
+    display: flex;
+    gap: 24px;
+    padding-top: 30px;
+    border-top: 1px solid #deded8;
+}
+
+.admin-footer a {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-footer a:hover {
+    color: #697d36;
+}
+
+/* Responsive admin layout */
+
+@media (max-width: 760px) {
+
+    .admin-page {
+        padding: 40px 0 70px;
+    }
+
+    .admin-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 45px;
+    }
+
+    .admin-stat-card {
+        padding: 24px;
+    }
+
+    .admin-section h2 {
+        font-size: 27px;
+    }
+
+    .admin-table {
+        min-width: 650px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 14px;
+    }
+}

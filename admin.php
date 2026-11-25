@@ -1,3 +1,4 @@
+
 <?php
 
 // Include session functions
@@ -96,7 +97,7 @@ $query = $dbCon->prepare("SELECT COUNT(*) FROM user");
 $query->execute();
 $totalUsers = $query->fetchColumn();
 
-// Get all users, including their blocked status
+// Get all users, including blocked status
 $query = $dbCon->prepare(
     "SELECT userID, userType, username, email, city, isBlocked
      FROM user"
@@ -112,149 +113,287 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>LUBI Admin Panel</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 </head>
 
 <body>
 
-    <h1>LUBI Admin Panel</h1>
+    <!-- Header -->
+    <header class="header">
 
-    <p>Welcome to the admin area.</p>
+        <a href="index.php" class="wordmark">
+            LUBI<span class="wordmark-dot">.</span>
+        </a>
 
-    <h2>Dashboard</h2>
+        <nav class="main-nav">
+            <a href="index.php">Home</a>
+            <a href="admin.php">Admin Panel</a>
+        </nav>
 
-    <p>Total users: <?php echo $totalUsers; ?></p>
-    <p>Total posts: <?php echo $totalPosts; ?></p>
+        <div class="header-right">
+            <a href="logout.php" class="button-dark">Logout</a>
+        </div>
 
-    <!-- Users table -->
-    <h2>Users</h2>
+    </header>
 
-    <table border="1" cellpadding="10">
+    <main class="page-container admin-page">
 
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>User Type</th>
-            <th>City</th>
-            <th>Action</th>
-        </tr>
+        <!-- Page heading -->
+        <div class="admin-heading">
 
-        <?php foreach ($users as $user) { ?>
+            <span class="eyebrow">LUBI / ADMINISTRATION</span>
 
-            <tr>
-                <td><?php echo htmlspecialchars($user['userID']); ?></td>
-                <td><?php echo htmlspecialchars($user['username']); ?></td>
-                <td><?php echo htmlspecialchars($user['email']); ?></td>
-                <td><?php echo htmlspecialchars($user['userType']); ?></td>
-                <td><?php echo htmlspecialchars($user['city'] ?? ''); ?></td>
+            <h1>Admin <span class="serif">Dashboard.</span></h1>
 
-                <td>
+            <p>Manage users, posts and community activity.</p>
 
-                    <?php if ($user['userType'] == 'admin') { ?>
+        </div>
 
-                        Admin
+        <!-- Dashboard statistics -->
+        <div class="admin-stats">
 
-                    <?php } else { ?>
+            <div class="admin-stat-card">
+                <span>Total Users</span>
 
-                        <form action="admin.php" method="POST">
+                <strong>
+                    <?php echo htmlspecialchars((string) $totalUsers); ?>
+                </strong>
+            </div>
 
-                            <input
-                                type="hidden"
-                                name="userID"
-                                value="<?php echo $user['userID']; ?>"
-                            >
+            <div class="admin-stat-card">
+                <span>Total Posts</span>
 
-                            <input
-                                type="hidden"
-                                name="csrf_token"
-                                value="<?php echo csrf_token(); ?>"
-                            >
+                <strong>
+                    <?php echo htmlspecialchars((string) $totalPosts); ?>
+                </strong>
+            </div>
 
-                            <?php if ($user['isBlocked'] == 1) { ?>
+        </div>
 
-                                <button type="submit" name="unblockUser">
-                                    Unblock
-                                </button>
+        <!-- Users section -->
+        <section class="admin-section">
 
-                            <?php } else { ?>
+            <h2>Manage <span class="serif">Users.</span></h2>
 
-                                <button type="submit" name="blockUser">
-                                    Block
-                                </button>
+            <div class="admin-table-wrapper">
 
-                            <?php } ?>
+                <table class="admin-table">
 
-                        </form>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>User Type</th>
+                            <th>City</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-                    <?php } ?>
+                    <tbody>
 
-                </td>
-            </tr>
+                        <?php foreach ($users as $user) { ?>
 
-        <?php } ?>
+                            <tr>
 
-    </table>
+                                <td>
+                                    <?php echo htmlspecialchars((string) $user['userID']); ?>
+                                </td>
 
-    <!-- Posts table -->
-    <h2>Posts</h2>
+                                <td>
+                                    <?php echo htmlspecialchars($user['username']); ?>
+                                </td>
 
-    <table border="1" cellpadding="10">
+                                <td>
+                                    <?php echo htmlspecialchars($user['email']); ?>
+                                </td>
 
-        <tr>
-            <th>Post ID</th>
-            <th>Username</th>
-            <th>Category</th>
-            <th>Caption</th>
-            <th>Action</th>
-        </tr>
+                                <td>
+                                    <?php echo htmlspecialchars($user['userType']); ?>
+                                </td>
 
-        <?php foreach ($posts as $post) { ?>
+                                <td>
+                                    <?php echo htmlspecialchars($user['city'] ?? ''); ?>
+                                </td>
 
-            <tr>
-                <td><?php echo htmlspecialchars($post['postID']); ?></td>
-                <td><?php echo htmlspecialchars($post['username']); ?></td>
-                <td><?php echo htmlspecialchars($post['categoryName']); ?></td>
-                <td><?php echo htmlspecialchars($post['caption']); ?></td>
+                                <td>
 
-                <td>
+                                    <div class="admin-actions">
 
-                    <a href="post.php?postID=<?php echo $post['postID']; ?>">
-                        View Post
-                    </a>
+                                        <?php if ($user['userType'] == 'admin') { ?>
 
-                    <form action="admin.php" method="POST">
+                                            <span>Admin</span>
 
-                        <input
-                            type="hidden"
-                            name="postID"
-                            value="<?php echo $post['postID']; ?>"
-                        >
+                                        <?php } else { ?>
 
-                        <input
-                            type="hidden"
-                            name="csrf_token"
-                            value="<?php echo csrf_token(); ?>"
-                        >
+                                            <form action="admin.php" method="POST">
 
-                        <button type="submit" name="deletePost">
-                            Delete
-                        </button>
+                                                <input
+                                                    type="hidden"
+                                                    name="userID"
+                                                    value="<?php echo htmlspecialchars((string) $user['userID']); ?>"
+                                                >
 
-                    </form>
+                                                <input
+                                                    type="hidden"
+                                                    name="csrf_token"
+                                                    value="<?php echo htmlspecialchars(csrf_token()); ?>"
+                                                >
 
-                </td>
-            </tr>
+                                                <?php if ($user['isBlocked'] == 1) { ?>
 
-        <?php } ?>
+                                                    <button
+                                                        type="submit"
+                                                        name="unblockUser"
+                                                        class="admin-btn admin-btn-secondary"
+                                                    >
+                                                        Unblock
+                                                    </button>
 
-    </table>
+                                                <?php } else { ?>
 
-    <br>
+                                                    <button
+                                                        type="submit"
+                                                        name="blockUser"
+                                                        class="admin-btn admin-btn-danger"
+                                                    >
+                                                        Block
+                                                    </button>
 
-    <a href="index.php">Home</a>
-    <br>
-    <a href="logout.php">Logout</a>
+                                                <?php } ?>
+
+                                            </form>
+
+                                        <?php } ?>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        <?php } ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- Posts section -->
+        <section class="admin-section">
+
+            <h2>Manage <span class="serif">Posts.</span></h2>
+
+            <div class="admin-table-wrapper">
+
+                <table class="admin-table">
+
+                    <thead>
+                        <tr>
+                            <th>Post ID</th>
+                            <th>Username</th>
+                            <th>Category</th>
+                            <th>Caption</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <?php foreach ($posts as $post) { ?>
+
+                            <tr>
+
+                                <td>
+                                    <?php echo htmlspecialchars((string) $post['postID']); ?>
+                                </td>
+
+                                <td>
+                                    <?php echo htmlspecialchars($post['username']); ?>
+                                </td>
+
+                                <td>
+                                    <?php echo htmlspecialchars($post['categoryName']); ?>
+                                </td>
+
+                                <td>
+                                    <?php echo htmlspecialchars($post['caption']); ?>
+                                </td>
+
+                                <td>
+
+                                    <div class="admin-actions">
+
+                                        <a
+                                            href="post.php?postID=<?php echo urlencode((string) $post['postID']); ?>"
+                                            class="admin-btn admin-btn-secondary"
+                                        >
+                                            View Post
+                                        </a>
+
+                                        <form action="admin.php" method="POST">
+
+                                            <input
+                                                type="hidden"
+                                                name="postID"
+                                                value="<?php echo htmlspecialchars((string) $post['postID']); ?>"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="<?php echo htmlspecialchars(csrf_token()); ?>"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                name="deletePost"
+                                                class="admin-btn admin-btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this post?');"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        <?php } ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- Footer links -->
+        <div class="admin-footer">
+
+            <a href="index.php">Back to Home</a>
+
+            <a href="logout.php">Logout</a>
+
+        </div>
+
+    </main>
 
 </body>
 
