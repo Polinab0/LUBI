@@ -78,6 +78,10 @@ $allPosts = $postObject->getAllPosts();
         Edit Profile
     </a>
 
+    <a href="myCourses.php">
+       My Courses
+    </a>
+
     <hr>
 
     <h2>My Posts</h2>

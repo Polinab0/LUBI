@@ -125,6 +125,41 @@ CREATE TABLE follow (
         REFERENCES user(userID)
 ) ENGINE=InnoDB;
 
+CREATE TABLE course (
+    courseID INT NOT NULL AUTO_INCREMENT,
+    title VARCHAR(150) NOT NULL,
+    description TEXT,
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    professionalID INT NOT NULL,
+    categoryID INT NOT NULL,
+
+    PRIMARY KEY (courseID),
+
+    FOREIGN KEY (professionalID)
+        REFERENCES user(userID),
+
+    FOREIGN KEY (categoryID)
+        REFERENCES category(categoryID)
+) ENGINE=InnoDB;
+
+CREATE TABLE course_enrollment (
+    enrollmentID INT NOT NULL AUTO_INCREMENT,
+    userID INT NOT NULL,
+    courseID INT NOT NULL,
+    enrolledAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (enrollmentID),
+
+    UNIQUE (userID, courseID),
+
+    FOREIGN KEY (userID)
+        REFERENCES user(userID),
+
+    FOREIGN KEY (courseID)
+        REFERENCES course(courseID)
+) ENGINE=InnoDB;
+
+
 
 -- Insert default categories
 INSERT INTO category (name)

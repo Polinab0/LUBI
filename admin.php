@@ -3,7 +3,6 @@
 // Include session functions
 require_once 'includes/session.php';
 
-// Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
     header("Location: login.php");
     exit();
@@ -15,19 +14,21 @@ if (!isset($_SESSION['userType']) || $_SESSION['userType'] != 'admin') {
     exit();
 }
 
-// Connect to the database
 require_once 'dbcon.php';
 require_once 'classes/Post.php';
+require_once "classes/Course.php";
 
 $database = new Database();
 $dbCon = $database->connect();
 
 $postObject = new Post($dbCon);
+$courseObject = new Course($dbCon);
+
+$courses = $courseObject->getAllCourses();
 
 // Handle admin actions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    // Check CSRF token
     if (
         !isset($_POST['csrf_token']) ||
         !verify_csrf_token($_POST['csrf_token'])
@@ -35,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Invalid CSRF token.");
     }
 
-    // Delete a post
     if (isset($_POST['deletePost'])) {
 
         $postID = filter_input(INPUT_POST, 'postID', FILTER_VALIDATE_INT);
@@ -49,7 +49,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Block or unblock a user
+     if (isset($_POST['deleteCourse'])) {
+
+          $courseID = filter_input(
+             INPUT_POST,
+             'courseID',
+             FILTER_VALIDATE_INT
+          );
+
+        if (!$courseID) {
+            die("Invalid course ID.");
+        }
+
+      $courseObject->deleteCourse($courseID);
+    }
+
     if (isset($_POST['blockUser']) || isset($_POST['unblockUser'])) {
 
         $userID = filter_input(INPUT_POST, 'userID', FILTER_VALIDATE_INT);
@@ -63,10 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             die("You cannot block yourself.");
         }
 
-        // Set blocked status
         $isBlocked = isset($_POST['blockUser']) ? 1 : 0;
 
-        // Only regular users can be blocked or unblocked
         $query = $dbCon->prepare(
             "UPDATE user
              SET isBlocked = :isBlocked
@@ -80,18 +92,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $query->execute();
     }
 
-    // Refresh the admin page
     header("Location: admin.php");
     exit();
 }
 
-// Get all posts
 $posts = $postObject->getAllPosts();
 
-// Count unique posts
 $totalPosts = count(array_unique(array_column($posts, 'postID')));
+$totalCourses = count($courses);
 
-// Count users
 $query = $dbCon->prepare("SELECT COUNT(*) FROM user");
 $query->execute();
 $totalUsers = $query->fetchColumn();
@@ -125,6 +134,7 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
     <p>Total users: <?php echo $totalUsers; ?></p>
     <p>Total posts: <?php echo $totalPosts; ?></p>
+    <p>Total courses: <?php echo $totalCourses; ?></p>
 
     <!-- Users table -->
     <h2>Users</h2>
@@ -249,6 +259,106 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
         <?php } ?>
 
     </table>
+
+
+    <!-- Courses table -->
+<h2>Courses</h2>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>Course ID</th>
+        <th>Title</th>
+        <th>Professional</th>
+        <th>Category</th>
+        <th>Created</th>
+        <th>Action</th>
+    </tr>
+
+    <?php foreach ($courses as $course) { ?>
+
+        <tr>
+
+            <td>
+                <?php echo htmlspecialchars(
+                    $course['courseID'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
+            </td>
+
+            <td>
+                <?php echo htmlspecialchars(
+                    $course['title'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
+            </td>
+
+            <td>
+                <?php echo htmlspecialchars(
+                    $course['professionalName'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
+            </td>
+
+            <td>
+                <?php echo htmlspecialchars(
+                    $course['categoryName'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
+            </td>
+
+            <td>
+                <?php echo htmlspecialchars(
+                    $course['createdAt'],
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?>
+            </td>
+
+            <td>
+
+                <a href="course.php?courseID=<?php echo (int) $course['courseID']; ?>">
+                    View Course
+                </a>
+
+                <form action="admin.php" method="POST">
+
+                    <input
+                        type="hidden"
+                        name="courseID"
+                        value="<?php echo (int) $course['courseID']; ?>"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="<?php echo htmlspecialchars(
+                            csrf_token(),
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ); ?>"
+                    >
+
+                    <button
+                        type="submit"
+                        name="deleteCourse"
+                    >
+                        Delete
+                    </button>
+
+                </form>
+
+            </td>
+
+        </tr>
+
+    <?php } ?>
+
+</table>
 
     <br>
 
