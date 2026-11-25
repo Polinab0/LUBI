@@ -1,24 +1,18 @@
 <?php
 
-// Include the session functions
+
 require_once "includes/session.php";
 
-// Check if the user is logged in
 confirm_logged_in();
 
-// Include the database connection
 require_once "dbcon.php";
 
-// Include the Post class
 require_once "classes/Post.php";
 
-// Include the Comment class
 require_once "classes/Comment.php";
 
-// Create the Database object
 $database = new Database();
 
-// Create the PDO connection
 $dbCon = $database->connect();
 
 // Create objects
@@ -29,19 +23,15 @@ $commentObject = new Comment($dbCon);
 // Check if the like button was pressed
 if (isset($_POST['like'])) {
 
-    // Get the post ID
     $postID = $_POST['postID'];
 
-    // Get the logged in user ID
     $userID = $_SESSION['userID'];
 
-    // Add the like
     $postObject->likePost(
         $userID,
         $postID
     );
 
-    // Reload the page
     header("Location: index.php");
     exit();
 }
@@ -51,23 +41,18 @@ if (isset($_POST['like'])) {
 // Check if a comment was submitted
 if (isset($_POST['addComment'])) {
 
-    // Get the post ID
     $postID = $_POST['postID'];
 
-    // Get the comment text
     $commentText = $_POST['commentText'];
 
-    // Get the logged in user ID
     $userID = $_SESSION['userID'];
 
-    // Add the comment
     $commentObject->addComment(
         $userID,
         $postID,
         $commentText
     );
 
-    // Reload the page
     header("Location: index.php");
     exit();
 }
@@ -88,21 +73,17 @@ if (isset($_GET['categoryID'])) {
 
     $selectedCategoryID = $_GET['categoryID'];
 
-    // Get posts from the selected category
     $posts = $postObject->getPostsByCategory(
         $selectedCategoryID
     );
 
 } else {
 
-    // Get all posts
     $posts = $postObject->getAllPosts();
 }
 
-// Get the latest comments
 $latestComments = $commentObject->getLatestComments();
 
-// Get the newest posts
 $newestPosts = $postObject->getNewestPosts();
 
 ?>
@@ -152,7 +133,7 @@ $newestPosts = $postObject->getNewestPosts();
             Discover
         </a>
 
-        <a href="#">
+        <a href="courses.php">
             Learn
         </a>
 
