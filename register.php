@@ -32,54 +32,82 @@ if (isset($_POST['submit'])) {
         die("Invalid CSRF token.");
     }
 
-    // Get form values
-    $userType = $_POST['userType'] ?? '';
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $email = trim($_POST['email'] ?? '');
-    $city = trim($_POST['city'] ?? '');
-    $bio = trim($_POST['bio'] ?? '');
+    // SPAM PROTECTION 1: Honeypot
+    // Bots may fill in this hidden field.
+    if (!empty($_POST['website'] ?? '')) {
+        die("Registration could not be completed.");
+    }
 
-    // Check if user type is valid
-    $allowedUserTypes = ['learner', 'professional'];
+    // SPAM PROTECTION 2: Rate limiting
+    // Allow one registration attempt every 30 seconds
+    // within the same PHP session.
+    $currentTime = time();
+    $cooldown = 30;
 
-    if (!in_array($userType, $allowedUserTypes, true)) {
-        $message = "Invalid user type.";
+    if (
+        isset($_SESSION['last_registration_attempt']) &&
+        ($currentTime - $_SESSION['last_registration_attempt']) < $cooldown
+    ) {
+        $remainingTime = $cooldown -
+            ($currentTime - $_SESSION['last_registration_attempt']);
 
-    } elseif (empty($username)) {
-        $message = "Username is required.";
-
-    } elseif (empty($email)) {
-        $message = "Email is required.";
-
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = "Email is not valid.";
-
-    } elseif (strlen($password) < 8) {
-        $message = "Password must be at least 8 characters.";
-
-    } elseif (strlen($bio) > 500) {
-        $message = "Bio cannot be longer than 500 characters.";
+        $message = "Please wait " . $remainingTime .
+            " seconds before trying again.";
 
     } else {
 
-        // Register the new user
-        try {
-            $userObject->register(
-                $userType,
-                $username,
-                $password,
-                $email,
-                $city,
-                $bio
-            );
+        // Save the time of this registration attempt
+        $_SESSION['last_registration_attempt'] = $currentTime;
 
-            // Redirect to login
-            header("Location: login.php");
-            exit();
+        // Get form values
+        $userType = $_POST['userType'] ?? '';
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $email = trim($_POST['email'] ?? '');
+        $city = trim($_POST['city'] ?? '');
+        $bio = trim($_POST['bio'] ?? '');
 
-        } catch (PDOException $e) {
-            $message = "Could not create account. Please check your details or try another email.";
+        // Check if user type is valid
+        $allowedUserTypes = ['learner', 'professional'];
+
+        if (!in_array($userType, $allowedUserTypes, true)) {
+            $message = "Invalid user type.";
+
+        } elseif (empty($username)) {
+            $message = "Username is required.";
+
+        } elseif (empty($email)) {
+            $message = "Email is required.";
+
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $message = "Email is not valid.";
+
+        } elseif (strlen($password) < 8) {
+            $message = "Password must be at least 8 characters.";
+
+        } elseif (strlen($bio) > 500) {
+            $message = "Bio cannot be longer than 500 characters.";
+
+        } else {
+
+            // Register the new user
+            try {
+                $userObject->register(
+                    $userType,
+                    $username,
+                    $password,
+                    $email,
+                    $city,
+                    $bio
+                );
+
+                // Redirect to login
+                header("Location: login.php");
+                exit();
+
+            } catch (PDOException $e) {
+                $message = "Could not create account. Please check your details or try another email.";
+            }
         }
     }
 }
@@ -119,28 +147,61 @@ if (isset($_POST['submit'])) {
 
             <?php if (!empty($message)): ?>
                 <p class="register-error">
-                    <?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(
+                        $message,
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>
                 </p>
             <?php endif; ?>
 
             <form action="register.php" method="post">
 
+                <!-- SPAM PROTECTION: Honeypot -->
+                <div
+                    style="position: absolute; left: -9999px;"
+                    aria-hidden="true"
+                >
+                    <label for="website">Website</label>
+
+                    <input
+                        type="text"
+                        name="website"
+                        id="website"
+                        tabindex="-1"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- CSRF protection -->
                 <input
                     type="hidden"
                     name="csrf_token"
-                    value="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8'); ?>"
+                    value="<?php echo htmlspecialchars(
+                        csrf_token(),
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
                 >
 
                 <label for="userType">I want to join as</label>
 
                 <select name="userType" id="userType" required>
-                    <option value="learner" <?php echo (($userType ?? '') === 'learner') ? 'selected' : ''; ?>>
+
+                    <option
+                        value="learner"
+                        <?php echo (($userType ?? '') === 'learner') ? 'selected' : ''; ?>
+                    >
                         Learner
                     </option>
 
-                    <option value="professional" <?php echo (($userType ?? '') === 'professional') ? 'selected' : ''; ?>>
+                    <option
+                        value="professional"
+                        <?php echo (($userType ?? '') === 'professional') ? 'selected' : ''; ?>
+                    >
                         Professional
                     </option>
+
                 </select>
 
                 <label for="username">Username</label>
@@ -150,7 +211,11 @@ if (isset($_POST['submit'])) {
                     name="username"
                     id="username"
                     maxlength="100"
-                    value="<?php echo htmlspecialchars($username ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                    value="<?php echo htmlspecialchars(
+                        $username ?? '',
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
                     required
                 >
 
@@ -160,7 +225,11 @@ if (isset($_POST['submit'])) {
                     type="email"
                     name="email"
                     id="email"
-                    value="<?php echo htmlspecialchars($email ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                    value="<?php echo htmlspecialchars(
+                        $email ?? '',
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
                     required
                 >
 
@@ -185,7 +254,11 @@ if (isset($_POST['submit'])) {
                     type="text"
                     name="city"
                     id="city"
-                    value="<?php echo htmlspecialchars($city ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                    value="<?php echo htmlspecialchars(
+                        $city ?? '',
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
                 >
 
                 <label for="bio">About You (Optional)</label>
@@ -196,7 +269,11 @@ if (isset($_POST['submit'])) {
                     rows="4"
                     maxlength="500"
                     placeholder="Tell us a little about yourself..."
-                ><?php echo htmlspecialchars($bio ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+                ><?php echo htmlspecialchars(
+                    $bio ?? '',
+                    ENT_QUOTES,
+                    'UTF-8'
+                ); ?></textarea>
 
                 <button type="submit" name="submit">
                     Create Account
