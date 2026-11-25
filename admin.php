@@ -4,32 +4,51 @@
 // Include session functions
 require_once 'includes/session.php';
 
+// Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
     header("Location: login.php");
     exit();
 }
 
 // Only admins can access this page
-if (!isset($_SESSION['userType']) || $_SESSION['userType'] != 'admin') {
+if (!isset($_SESSION['userType']) || $_SESSION['userType'] !== 'admin') {
+    http_response_code(403);
     echo "Access denied. Admins only.";
     exit();
 }
 
+// Include database and classes
 require_once 'dbcon.php';
 require_once 'classes/Post.php';
-require_once "classes/Course.php";
+require_once 'classes/Course.php';
 
+// Connect to database
 $database = new Database();
 $dbCon = $database->connect();
 
+// Create objects
 $postObject = new Post($dbCon);
 $courseObject = new Course($dbCon);
 
-$courses = $courseObject->getAllCourses();
+// Check if the course table exists locally
+$query = $dbCon->prepare(
+    "SHOW TABLES LIKE 'course'"
+);
+$query->execute();
+
+$courseTableExists = (bool) $query->fetchColumn();
+
+// Load courses only if the table exists
+$courses = [];
+
+if ($courseTableExists) {
+    $courses = $courseObject->getAllCourses();
+}
 
 // Handle admin actions
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // Check CSRF token
     if (
         !isset($_POST['csrf_token']) ||
         !verify_csrf_token($_POST['csrf_token'])
@@ -37,9 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Invalid CSRF token.");
     }
 
+    // Delete a post
     if (isset($_POST['deletePost'])) {
 
-        $postID = filter_input(INPUT_POST, 'postID', FILTER_VALIDATE_INT);
+        $postID = filter_input(
+            INPUT_POST,
+            'postID',
+            FILTER_VALIDATE_INT
+        );
 
         if (!$postID) {
             die("Invalid post ID.");
@@ -50,36 +74,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-     if (isset($_POST['deleteCourse'])) {
+    // Delete a course
+    if (isset($_POST['deleteCourse'])) {
 
-          $courseID = filter_input(
-             INPUT_POST,
-             'courseID',
-             FILTER_VALIDATE_INT
-          );
+        if (!$courseTableExists) {
+            die("Course management is not available locally yet.");
+        }
+
+        $courseID = filter_input(
+            INPUT_POST,
+            'courseID',
+            FILTER_VALIDATE_INT
+        );
 
         if (!$courseID) {
             die("Invalid course ID.");
         }
 
-      $courseObject->deleteCourse($courseID);
+        $courseObject->deleteCourse($courseID);
     }
 
+    // Block or unblock a user
     if (isset($_POST['blockUser']) || isset($_POST['unblockUser'])) {
 
-        $userID = filter_input(INPUT_POST, 'userID', FILTER_VALIDATE_INT);
+        $userID = filter_input(
+            INPUT_POST,
+            'userID',
+            FILTER_VALIDATE_INT
+        );
 
         if (!$userID) {
             die("Invalid user ID.");
         }
 
-        // Do not allow an admin to block themselves
+        // Admin cannot block themselves
         if ($userID == $_SESSION['userID']) {
             die("You cannot block yourself.");
         }
 
         $isBlocked = isset($_POST['blockUser']) ? 1 : 0;
 
+        // Only regular users can be blocked
         $query = $dbCon->prepare(
             "UPDATE user
              SET isBlocked = :isBlocked
@@ -87,8 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
              AND userType != 'admin'"
         );
 
-        $query->bindValue(':isBlocked', $isBlocked, PDO::PARAM_INT);
-        $query->bindValue(':userID', $userID, PDO::PARAM_INT);
+        $query->bindValue(
+            ':isBlocked',
+            $isBlocked,
+            PDO::PARAM_INT
+        );
+
+        $query->bindValue(
+            ':userID',
+            $userID,
+            PDO::PARAM_INT
+        );
 
         $query->execute();
     }
@@ -97,16 +141,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit();
 }
 
+// Get all posts
 $posts = $postObject->getAllPosts();
 
-$totalPosts = count(array_unique(array_column($posts, 'postID')));
+// Count unique posts
+$totalPosts = count(
+    array_unique(array_column($posts, 'postID'))
+);
+
+// Count courses
 $totalCourses = count($courses);
 
+// Count users
 $query = $dbCon->prepare("SELECT COUNT(*) FROM user");
 $query->execute();
 $totalUsers = $query->fetchColumn();
 
-// Get all users, including blocked status
+// Get all users
 $query = $dbCon->prepare(
     "SELECT userID, userType, username, email, city, isBlocked
      FROM user"
@@ -114,6 +165,15 @@ $query = $dbCon->prepare(
 
 $query->execute();
 $users = $query->fetchAll(PDO::FETCH_ASSOC);
+
+// Escape output safely
+function adminText($value) {
+    return htmlspecialchars(
+        (string) ($value ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
 
 ?>
 
@@ -149,9 +209,10 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
         </nav>
 
         <div class="header-right">
-            <a href="logout.php" class="button-dark">Logout</a>
+            <a href="logout.php" class="button-dark">
+                Logout
+            </a>
         </div>
-
 
     </header>
 
@@ -160,11 +221,17 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
         <!-- Page heading -->
         <div class="admin-heading">
 
-            <span class="eyebrow">LUBI / ADMINISTRATION</span>
+            <span class="eyebrow">
+                LUBI / ADMINISTRATION
+            </span>
 
-            <h1>Admin <span class="serif">Dashboard.</span></h1>
+            <h1>
+                Admin <span class="serif">Dashboard.</span>
+            </h1>
 
-            <p>Manage users, posts and community activity.</p>
+            <p>
+                Manage users, posts and community activity.
+            </p>
 
         </div>
 
@@ -173,30 +240,33 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
             <div class="admin-stat-card">
                 <span>Total Users</span>
-
                 <strong>
-                    <?php echo htmlspecialchars((string) $totalUsers); ?>
+                    <?php echo adminText($totalUsers); ?>
                 </strong>
             </div>
 
             <div class="admin-stat-card">
                 <span>Total Posts</span>
-
                 <strong>
-                    <?php echo htmlspecialchars((string) $totalPosts); ?>
+                    <?php echo adminText($totalPosts); ?>
                 </strong>
             </div>
 
             <div class="admin-stat-card">
                 <span>Total Courses</span>
-                <strong><?php echo htmlspecialchars((string) $totalCourses); ?></strong>
+                <strong>
+                    <?php echo adminText($totalCourses); ?>
+                </strong>
             </div>
+
         </div>
 
         <!-- Users section -->
         <section class="admin-section">
 
-            <h2>Manage <span class="serif">Users.</span></h2>
+            <h2>
+                Manage <span class="serif">Users.</span>
+            </h2>
 
             <div class="admin-table-wrapper">
 
@@ -215,55 +285,55 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
                     <tbody>
 
-                        <?php foreach ($users as $user) { ?>
+                        <?php foreach ($users as $user): ?>
 
                             <tr>
 
                                 <td>
-                                    <?php echo htmlspecialchars((string) $user['userID']); ?>
+                                    <?php echo adminText($user['userID']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($user['username']); ?>
+                                    <?php echo adminText($user['username']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($user['email']); ?>
+                                    <?php echo adminText($user['email']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($user['userType']); ?>
+                                    <?php echo adminText($user['userType']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($user['city'] ?? ''); ?>
+                                    <?php echo adminText($user['city']); ?>
                                 </td>
 
                                 <td>
 
                                     <div class="admin-actions">
 
-                                        <?php if ($user['userType'] == 'admin') { ?>
+                                        <?php if ($user['userType'] === 'admin'): ?>
 
                                             <span>Admin</span>
 
-                                        <?php } else { ?>
+                                        <?php else: ?>
 
                                             <form action="admin.php" method="POST">
 
                                                 <input
                                                     type="hidden"
                                                     name="userID"
-                                                    value="<?php echo htmlspecialchars((string) $user['userID']); ?>"
+                                                    value="<?php echo adminText($user['userID']); ?>"
                                                 >
 
                                                 <input
                                                     type="hidden"
                                                     name="csrf_token"
-                                                    value="<?php echo htmlspecialchars(csrf_token()); ?>"
+                                                    value="<?php echo adminText(csrf_token()); ?>"
                                                 >
 
-                                                <?php if ($user['isBlocked'] == 1) { ?>
+                                                <?php if ($user['isBlocked'] == 1): ?>
 
                                                     <button
                                                         type="submit"
@@ -273,7 +343,7 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
                                                         Unblock
                                                     </button>
 
-                                                <?php } else { ?>
+                                                <?php else: ?>
 
                                                     <button
                                                         type="submit"
@@ -283,12 +353,11 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
                                                         Block
                                                     </button>
 
-
-                                                <?php } ?>
+                                                <?php endif; ?>
 
                                             </form>
 
-                                        <?php } ?>
+                                        <?php endif; ?>
 
                                     </div>
 
@@ -296,7 +365,7 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
                             </tr>
 
-                        <?php } ?>
+                        <?php endforeach; ?>
 
                     </tbody>
 
@@ -309,7 +378,9 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
         <!-- Posts section -->
         <section class="admin-section">
 
-            <h2>Manage <span class="serif">Posts.</span></h2>
+            <h2>
+                Manage <span class="serif">Posts.</span>
+            </h2>
 
             <div class="admin-table-wrapper">
 
@@ -327,24 +398,24 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
                     <tbody>
 
-                        <?php foreach ($posts as $post) { ?>
+                        <?php foreach ($posts as $post): ?>
 
                             <tr>
 
                                 <td>
-                                    <?php echo htmlspecialchars((string) $post['postID']); ?>
+                                    <?php echo adminText($post['postID']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($post['username']); ?>
+                                    <?php echo adminText($post['username']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($post['categoryName']); ?>
+                                    <?php echo adminText($post['categoryName']); ?>
                                 </td>
 
                                 <td>
-                                    <?php echo htmlspecialchars($post['caption']); ?>
+                                    <?php echo adminText($post['caption']); ?>
                                 </td>
 
                                 <td>
@@ -352,7 +423,7 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="admin-actions">
 
                                         <a
-                                            href="post.php?postID=<?php echo urlencode((string) $post['postID']); ?>"
+                                            href="post.php?postID=<?php echo (int) $post['postID']; ?>"
                                             class="admin-btn admin-btn-secondary"
                                         >
                                             View Post
@@ -363,13 +434,13 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
                                             <input
                                                 type="hidden"
                                                 name="postID"
-                                                value="<?php echo htmlspecialchars((string) $post['postID']); ?>"
+                                                value="<?php echo (int) $post['postID']; ?>"
                                             >
 
                                             <input
                                                 type="hidden"
                                                 name="csrf_token"
-                                                value="<?php echo htmlspecialchars(csrf_token()); ?>"
+                                                value="<?php echo adminText(csrf_token()); ?>"
                                             >
 
                                             <button
@@ -389,7 +460,7 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
                             </tr>
 
-                        <?php } ?>
+                        <?php endforeach; ?>
 
                     </tbody>
 
@@ -399,118 +470,126 @@ $users = $query->fetchAll(PDO::FETCH_ASSOC);
 
         </section>
 
+        <!-- Courses section -->
         <section class="admin-section">
-    <!-- Courses table -->
-<h2>Manage <span class="serif">Courses.</span></h2>
 
-<div class="admin-table-wrapper">
-<table class="admin-table">
+            <h2>
+                Manage <span class="serif">Courses.</span>
+            </h2>
 
-    <tr>
-        <th>Course ID</th>
-        <th>Title</th>
-        <th>Professional</th>
-        <th>Category</th>
-        <th>Created</th>
-        <th>Action</th>
-    </tr>
+            <?php if (!$courseTableExists): ?>
 
-    <?php foreach ($courses as $course) { ?>
+                <p>
+                    Courses are not available in the local database yet.
+                </p>
 
-        <tr>
+            <?php else: ?>
 
-            <td>
-                <?php echo htmlspecialchars(
-                    $course['courseID'],
-                    ENT_QUOTES,
-                    'UTF-8'
-                ); ?>
-            </td>
+                <div class="admin-table-wrapper">
 
-            <td>
-                <?php echo htmlspecialchars(
-                    $course['title'],
-                    ENT_QUOTES,
-                    'UTF-8'
-                ); ?>
-            </td>
+                    <table class="admin-table">
 
-            <td>
-                <?php echo htmlspecialchars(
-                    $course['professionalName'],
-                    ENT_QUOTES,
-                    'UTF-8'
-                ); ?>
-            </td>
+                        <thead>
+                            <tr>
+                                <th>Course ID</th>
+                                <th>Title</th>
+                                <th>Professional</th>
+                                <th>Category</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
 
-            <td>
-                <?php echo htmlspecialchars(
-                    $course['categoryName'],
-                    ENT_QUOTES,
-                    'UTF-8'
-                ); ?>
-            </td>
+                        <tbody>
 
-            <td>
-                <?php echo htmlspecialchars(
-                    $course['createdAt'],
-                    ENT_QUOTES,
-                    'UTF-8'
-                ); ?>
-            </td>
+                            <?php foreach ($courses as $course): ?>
 
-            <td>
+                                <tr>
 
-                <a class="admin-btn admin-btn-secondary" href="course.php?courseID=<?php echo (int) $course['courseID']; ?>">
-                    View Course
-                </a>
+                                    <td>
+                                        <?php echo adminText($course['courseID']); ?>
+                                    </td>
 
-                <form action="admin.php" method="POST">
+                                    <td>
+                                        <?php echo adminText($course['title']); ?>
+                                    </td>
 
-                    <input
-                        type="hidden"
-                        name="courseID"
-                        value="<?php echo (int) $course['courseID']; ?>"
-                    >
+                                    <td>
+                                        <?php echo adminText($course['professionalName']); ?>
+                                    </td>
 
-                    <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="<?php echo htmlspecialchars(
-                            csrf_token(),
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ); ?>"
-                    >
+                                    <td>
+                                        <?php echo adminText($course['categoryName']); ?>
+                                    </td>
 
-                    <button
-                        type="submit"
-                        name="deleteCourse"
-                        class="admin-btn admin-btn-danger"
-                        onclick="return confirm('Are you sure you want to delete this course?');"
-                    >
-                        Delete
-                    </button>
+                                    <td>
+                                        <?php echo adminText($course['createdAt']); ?>
+                                    </td>
 
-                </form>
+                                    <td>
 
-            </td>
+                                        <div class="admin-actions">
 
-        </tr>
+                                            <a
+                                                href="course.php?courseID=<?php echo (int) $course['courseID']; ?>"
+                                                class="admin-btn admin-btn-secondary"
+                                            >
+                                                View Course
+                                            </a>
 
-    <?php } ?>
+                                            <form action="admin.php" method="POST">
 
-</table>
-</div>
+                                                <input
+                                                    type="hidden"
+                                                    name="courseID"
+                                                    value="<?php echo (int) $course['courseID']; ?>"
+                                                >
+
+                                                <input
+                                                    type="hidden"
+                                                    name="csrf_token"
+                                                    value="<?php echo adminText(csrf_token()); ?>"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    name="deleteCourse"
+                                                    class="admin-btn admin-btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this course?');"
+                                                >
+                                                    Delete
+                                                </button>
+
+                                            </form>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            <?php endforeach; ?>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            <?php endif; ?>
 
         </section>
 
-        <!-- Footer links -->
+        <!-- Footer -->
         <div class="admin-footer">
 
-            <a href="index.php">Back to Home</a>
+            <a href="index.php">
+                Back to Home
+            </a>
 
-            <a href="logout.php">Logout</a>
+            <a href="logout.php">
+                Logout
+            </a>
 
         </div>
 
