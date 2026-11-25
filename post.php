@@ -404,8 +404,7 @@ function postText($value) {
 
         <nav class="main-nav">
             <a href="index.php">Home</a>
-            <a href="savedPosts.php">Saved Posts</a>
-
+            <a href="saved.php">Saved Posts</a>
             <?php if (
                 isset($_SESSION['userType']) &&
                 $_SESSION['userType'] === 'admin'
