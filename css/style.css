@@ -952,3 +952,93 @@ h3 {
         padding: 14px;
     }
 }
+
+
+/* LUBI Login Page */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: #f7f7f3;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 45px;
+    background: #e9ebe1;
+}
+
+.login-card h1 {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.login-card p {
+    color: #666960;
+    margin-bottom: 30px;
+}
+
+.login-card label {
+    display: block;
+    margin: 20px 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.login-card input[type="email"],
+.login-card input[type="password"] {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #deded8;
+    background: white;
+}
+
+.login-card input[type="submit"] {
+    width: 100%;
+    margin-top: 28px;
+    padding: 16px;
+    border: none;
+    background: #22241e;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.login-card input[type="submit"]:hover {
+    background: #536429;
+}
+
+.login-card a {
+    color: #536429;
+    font-weight: 600;
+}
+
+.login-card .login-error {
+    color: #a44949;
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 28px;
+    }
+}
+
+/* Fix login button */
+.login-card button,
+.login-card input[type="submit"],
+.login-card button[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin-top: 25px;
+    background: #22241e;
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
