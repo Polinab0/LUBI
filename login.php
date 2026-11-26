@@ -1,4 +1,3 @@
-
 <?php
 
 // Include the database connection
@@ -31,45 +30,45 @@ if (isset($_POST['submit'])) {
     }
 
     // Get the form values
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
 
     // Check if email is valid
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = "Email is not valid.";
-    } else {
+        die("Email is not valid.");
+    }
 
-        // Try to login the user
-        $foundUser = $userObject->login(
-            $email,
-            $password
+    // Try to login the user
+    $foundUser = $userObject->login(
+        $email,
+        $password
+    );
+
+    // Check if login was successful
+    if ($foundUser) {
+
+        // Create a new session ID for security
+        session_regenerate_id(true);
+
+        // Clear old login information
+        unset(
+            $_SESSION['userID'],
+            $_SESSION['username'],
+            $_SESSION['userType']
         );
 
-        // Check if login was successful
-        if ($foundUser) {
+        // Save the correct user's information
+        $_SESSION['userID'] = $foundUser['userID'];
+        $_SESSION['username'] = $foundUser['username'];
+        $_SESSION['userType'] = $foundUser['userType'];
 
-            // Create a new session ID for security
-            session_regenerate_id(true);
+        // Redirect to the front page
+        header("Location: index.php");
+        exit();
 
-            // Clear old login information
-            unset(
-                $_SESSION['userID'],
-                $_SESSION['username'],
-                $_SESSION['userType']
-            );
+    } else {
 
-            // Save the correct user's information
-            $_SESSION['userID'] = $foundUser['userID'];
-            $_SESSION['username'] = $foundUser['username'];
-            $_SESSION['userType'] = $foundUser['userType'];
-
-            // Redirect to the front page
-            header("Location: index.php");
-            exit();
-
-        } else {
-            $message = "Wrong email or password.";
-        }
+        $message = "Wrong email or password.";
     }
 }
 
@@ -80,97 +79,64 @@ if (isset($_POST['submit'])) {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>LUBI - Login</title>
-
-    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="login-page">
+<body>
 
-    <main class="login-container">
+    <h1>Login</h1>
 
-        <div class="login-card">
+    <?php
+    if (isset($message)) {
+        echo "<p>" . htmlspecialchars(
+            $message,
+            ENT_QUOTES,
+            'UTF-8'
+        ) . "</p>";
+    }
+    ?>
 
-            <div class="login-header">
-                <a href="index.php" class="login-logo">LUBI.</a>
+    <form action="login.php" method="post">
 
-                <p class="login-tagline">
-                    Create. Learn. Grow. In Beauty.
-                </p>
-            </div>
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?php echo csrf_token(); ?>"
+        >
 
-            <h1>Welcome Back</h1>
+        <label for="email">Email:</label>
+        <input
+            type="email"
+            name="email"
+            id="email"
+            required
+        >
 
-            <p class="login-description">
-                Log in to continue your beauty journey.
-            </p>
+        <br><br>
 
-            <?php if (isset($message)) { ?>
-                <p class="login-error" role="alert">
-                    <?php
-                    echo htmlspecialchars(
-                        $message,
-                        ENT_QUOTES,
-                        'UTF-8'
-                    );
-                    ?>
-                </p>
-            <?php } ?>
+        <label for="password">Password:</label>
+        <input
+            type="password"
+            name="password"
+            id="password"
+            required
+        >
 
-            <form action="login.php" method="post" class="login-form">
+        <br><br>
 
-                <input
-                    type="hidden"
-                    name="csrf_token"
-                    value="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8'); ?>"
-                >
+        <input
+            type="submit"
+            name="submit"
+            value="Login"
+        >
 
-                <div class="login-field">
-                    <label for="email">Email Address</label>
+    </form>
 
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        placeholder="Enter your email"
-                        autocomplete="email"
-                        required
-                    >
-                </div>
+    <br>
 
-                <div class="login-field">
-                    <label for="password">Password</label>
-
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                        required
-                    >
-                </div>
-
-                <button type="submit" name="submit" class="login-button">
-                    Log In
-                </button>
-
-            </form>
-
-            <p class="login-register">
-                Don't have an account?
-                <a href="register.php">Sign Up</a>
-            </p>
-
-            <a href="index.php" class="login-back">
-                Back to Home
-            </a>
-
-        </div>
-
-    </main>
+    <a href="register.php">
+        Don't have an account? Sign Up
+    </a>
 
 </body>
 

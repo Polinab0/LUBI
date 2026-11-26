@@ -1,4 +1,3 @@
-
 <?php
 
 // Include the session functions
@@ -35,24 +34,6 @@ $currentUser = $userObject->getUserById($userID);
 // Get all posts
 $allPosts = $postObject->getAllPosts();
 
-// Get only this user's posts
-$myPosts = [];
-
-foreach ($allPosts as $post) {
-    if ((int)$post['userID'] === (int)$userID) {
-        $myPosts[$post['postID']] = $post;
-    }
-}
-
-// Safely display text
-function profileText($value) {
-    return htmlspecialchars(
-        (string)($value ?? ''),
-        ENT_QUOTES,
-        'UTF-8'
-    );
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -60,202 +41,87 @@ function profileText($value) {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>LUBI - My Profile</title>
-
-    <link rel="stylesheet" href="css/style.css">
+    <title>LUBI - Profile</title>
 </head>
 
-<body class="profile-page">
+<body>
 
-    <main class="profile-container">
+    <a href="index.php">Back to Feed</a>
 
-        <header class="profile-header">
+    <h1>Profile</h1>
 
-            <a href="index.php" class="profile-logo">
-                LUBI.
-            </a>
+    <h2>
+        <?php echo htmlspecialchars($currentUser['username'], ENT_QUOTES, 'UTF-8'); ?>
+    </h2>
 
-            <a href="index.php" class="profile-back">
-                Back to Feed
-            </a>
+    <p>
+        User type:
+        <?php echo htmlspecialchars($currentUser['userType'], ENT_QUOTES, 'UTF-8'); ?>
+    </p>
 
-        </header>
+    <p>
+        Email:
+        <?php echo htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8'); ?>
+    </p>
 
-        <section class="profile-intro">
+    <p>
+        City:
+        <?php echo htmlspecialchars($currentUser['city'], ENT_QUOTES, 'UTF-8'); ?>
+    </p>
 
-            <p class="profile-eyebrow">
-                MY LUBI SPACE
-            </p>
+    <p>
+        Bio:
+        <?php echo htmlspecialchars($currentUser['bio'], ENT_QUOTES, 'UTF-8'); ?>
+    </p>
 
-            <h1>
-                My <span>Profile.</span>
-            </h1>
+    <a href="editProfile.php">
+        Edit Profile
+    </a>
 
-            <p>
-                Your beauty journey, your community, your creativity.
-            </p>
+    <a href="myCourses.php">
+       My Courses
+    </a>
 
-        </section>
+    <hr>
 
-        <section class="profile-card">
+    <h2>My Posts</h2>
 
-            <div class="profile-card-top">
+    <?php foreach ($allPosts as $post) { ?>
 
-                <div class="profile-avatar">
-                    <?php
-                    echo profileText(
-                        strtoupper(substr($currentUser['username'], 0, 1))
-                    );
-                    ?>
-                </div>
+        <?php if ($post['username'] == $currentUser['username']) { ?>
 
-                <div>
-                    <h2>
-                        <?php echo profileText($currentUser['username']); ?>
-                    </h2>
+            <div>
 
-                    <span class="profile-role">
-                        <?php echo profileText(ucfirst($currentUser['userType'])); ?>
-                    </span>
-                </div>
+                <p>
+                    Category:
+                    <?php echo htmlspecialchars($post['categoryName'], ENT_QUOTES, 'UTF-8'); ?>
+                </p>
 
-            </div>
+                <?php if (!empty($post['file'])) { ?>
 
-            <div class="profile-details">
+                    <a href="post.php?postID=<?php echo $post['postID']; ?>">
 
-                <div class="profile-detail">
-                    <span>Email Address</span>
-                    <p>
-                        <?php echo profileText($currentUser['email']); ?>
-                    </p>
-                </div>
+                        <img
+                            src="<?php echo htmlspecialchars($post['file'], ENT_QUOTES, 'UTF-8'); ?>"
+                            alt="Post image"
+                            width="250"
+                        >
 
-                <div class="profile-detail">
-                    <span>City</span>
-                    <p>
-                        <?php echo profileText($currentUser['city'] ?: 'Not added yet'); ?>
-                    </p>
-                </div>
-
-                <div class="profile-detail profile-bio">
-                    <span>About Me</span>
-                    <p>
-                        <?php echo nl2br(profileText(
-                            $currentUser['bio'] ?: 'No bio added yet.'
-                        )); ?>
-                    </p>
-                </div>
-
-            </div>
-
-            <div class="profile-actions">
-
-                <a href="editProfile.php" class="profile-button">
-                    Edit Profile
-                </a>
-
-                <a href="myCourses.php" class="profile-button-secondary">
-                    My Courses
-                </a>
-
-            </div>
-
-        </section>
-
-        <section class="profile-posts-section">
-
-            <div class="profile-posts-heading">
-
-                <div>
-                    <p class="profile-eyebrow">
-                        MY CREATIONS
-                    </p>
-
-                    <h2>
-                        My <span>Posts.</span>
-                    </h2>
-                </div>
-
-                <span class="profile-post-count">
-                    <?php echo count($myPosts); ?> Posts
-                </span>
-
-            </div>
-
-            <?php if (empty($myPosts)): ?>
-
-                <div class="profile-empty">
-
-                    <h3>No posts yet.</h3>
-
-                    <p>
-                        Share your first beauty creation with the community.
-                    </p>
-
-                    <a href="createPost.php" class="profile-button">
-                        Create a Post
                     </a>
 
-                </div>
+                <?php } ?>
 
-            <?php else: ?>
+                <p>
+                    <?php echo htmlspecialchars($post['caption'], ENT_QUOTES, 'UTF-8'); ?>
+                </p>
 
-                <div class="profile-post-grid">
+            </div>
 
-                    <?php foreach ($myPosts as $post): ?>
+            <hr>
 
-                        <article class="profile-post-card">
+        <?php } ?>
 
-                            <a href="post.php?postID=<?php echo (int)$post['postID']; ?>">
-
-                                <?php if (!empty($post['file'])): ?>
-
-                                    <img
-                                        src="<?php echo profileText($post['file']); ?>"
-                                        alt="Post image"
-                                        class="profile-post-image"
-                                    >
-
-                                <?php else: ?>
-
-                                    <div class="profile-post-placeholder">
-                                        LUBI.
-                                    </div>
-
-                                <?php endif; ?>
-
-                            </a>
-
-                            <div class="profile-post-content">
-
-                                <span class="profile-post-category">
-                                    <?php echo profileText($post['categoryName']); ?>
-                                </span>
-
-                                <p>
-                                    <?php echo profileText($post['caption']); ?>
-                                </p>
-
-                                <a href="post.php?postID=<?php echo (int)$post['postID']; ?>"
-                                   class="profile-view-post">
-                                    View Post
-                                </a>
-
-                            </div>
-
-                        </article>
-
-                    <?php endforeach; ?>
-
-                </div>
-
-            <?php endif; ?>
-
-        </section>
-
-    </main>
+    <?php } ?>
 
 </body>
 
