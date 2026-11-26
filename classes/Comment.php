@@ -9,7 +9,6 @@ class Comment {
         $this->dbCon = $dbCon;
     }
 
-    // Add a new comment
     public function addComment(
         $userID,
         $postID,
@@ -24,7 +23,6 @@ class Comment {
             (:text, :userID, :postID)"
         );
 
-        // Bind the values
         $query->bindParam(':text', $text);
         $query->bindParam(':userID', $userID);
         $query->bindParam(':postID', $postID);
@@ -34,7 +32,6 @@ class Comment {
     }
 
 
-    // Get all comments for one post
     public function getComments($postID) {
 
         // Prepare the SQL query
@@ -51,13 +48,10 @@ class Comment {
             ORDER BY comment.createdAt DESC"
         );
 
-        // Bind the post ID
         $query->bindParam(':postID', $postID);
 
-        // Execute the query
         $query->execute();
 
-        // Return all comments
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -65,26 +59,20 @@ class Comment {
     // Get the number of comments for one post
     public function getCommentCount($postID) {
 
-        // Prepare the SQL query
         $query = $this->dbCon->prepare(
             "SELECT COUNT(*) AS commentCount
             FROM comment
             WHERE postID = :postID"
         );
 
-        // Bind the post ID
         $query->bindParam(':postID', $postID);
 
-        // Execute the query
         $query->execute();
 
-        // Get the result
         $result = $query->fetch(PDO::FETCH_ASSOC);
 
-        // Return the number of comments
         return $result['commentCount'];
     }
-// Get the latest comments
 public function getLatestComments($limit = 5) {
 
     // Prepare the SQL query
@@ -109,10 +97,8 @@ public function getLatestComments($limit = 5) {
         PDO::PARAM_INT
     );
 
-    // Execute the query
     $query->execute();
 
-    // Return the latest comments
     return $query->fetchAll(PDO::FETCH_ASSOC);
 }
 

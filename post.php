@@ -3,35 +3,26 @@
 // Include the session functions
 require_once "includes/session.php";
 
-// Check if the user is logged in
 confirm_logged_in();
 
-// Include the database connection
 require_once "dbcon.php";
 
-// Include the Post class
 require_once "classes/Post.php";
 
-// Include the Comment class
 require_once "classes/Comment.php";
 
-// Create the Database object
 $database = new Database();
 
-// Create the PDO connection
 $dbCon = $database->connect();
 
-// Create objects
 $postObject = new Post($dbCon);
 $commentObject = new Comment($dbCon);
 
-// Get the logged in user's ID
 $userID = $_SESSION['userID'];
 
 // Check if postID exists in the URL
 if (isset($_GET['postID'])) {
 
-    // Get the post ID from the URL
     $postID = filter_input(
         INPUT_GET,
         'postID',
@@ -53,8 +44,8 @@ if (isset($_GET['postID'])) {
     exit();
 }
 
-// Add a like
-if (isset($_POST['like'])) {
+
+    if (isset($_POST['like'])) {
 
     // Check the CSRF token
     if (
@@ -64,7 +55,6 @@ if (isset($_POST['like'])) {
         die("Invalid CSRF token.");
     }
 
-    // Add the like
     $postObject->likePost(
         $userID,
         $postID
@@ -75,7 +65,7 @@ if (isset($_POST['like'])) {
     exit();
 }
 
-// Delete a post
+
 if (isset($_POST['deletePost'])) {
 
     // Check the CSRF token
@@ -86,7 +76,7 @@ if (isset($_POST['deletePost'])) {
         die("Invalid CSRF token.");
     }
 
-    // Check if the post exists
+    
     if (!$post) {
         die("Post not found.");
     }
@@ -99,18 +89,18 @@ if (isset($_POST['deletePost'])) {
         die("You are not allowed to delete this post.");
     }
 
-    // Delete the post
+    
     $postObject->deletePost($postID);
 
-    // Redirect back to the feed
+    
     header("Location: index.php");
     exit();
 }
 
-// Add a comment
+
 if (isset($_POST['addComment'])) {
 
-    // Check the CSRF token
+    
     if (
         !isset($_POST['csrf_token']) ||
         !verify_csrf_token($_POST['csrf_token'])
@@ -118,22 +108,19 @@ if (isset($_POST['addComment'])) {
         die("Invalid CSRF token.");
     }
 
-    // Get the comment text
+    
     $commentText = trim($_POST['commentText'] ?? '');
 
-    // Check if the comment is empty
     if (empty($commentText)) {
         die("Comment cannot be empty.");
     }
 
-    // Add the comment
     $commentObject->addComment(
         $userID,
         $postID,
         $commentText
     );
 
-    // Reload the post page
     header("Location: post.php?postID=" . $postID);
     exit();
 }
@@ -153,13 +140,10 @@ $query->execute([
 // True if the current user has saved this post
 $isSaved = $query->fetch(PDO::FETCH_ASSOC) !== false;
 
-// Get like count
 $likeCount = $postObject->getLikeCount($postID);
 
-// Get comment count
 $commentCount = $commentObject->getCommentCount($postID);
 
-// Get all comments
 $comments = $commentObject->getComments($postID);
 
 ?>
